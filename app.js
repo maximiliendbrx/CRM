@@ -3,6 +3,7 @@
 const KEY = 'pulse-crm-v2';
 const seed = { contacts: [], interactions: [], followups: [] };
 let db = JSON.parse(localStorage.getItem(KEY) || 'null') || structuredClone(seed);
+let selectedContactId = null;
 const byId = id => db.contacts.find(c => c.id === id);
 const save = () => localStorage.setItem(KEY, JSON.stringify(db));
 const date = value => new Intl.DateTimeFormat('fr-FR', { dateStyle:'medium' }).format(new Date(value + (value.length === 10 ? 'T12:00:00' : '')));
@@ -14,7 +15,7 @@ function render() {
   const query = document.getElementById('search').value.toLowerCase();
   const contacts = db.contacts.filter(c => Object.values(c).some(v => v.toLowerCase().includes(query)));
   const contactList = document.getElementById('contacts'); contactList.replaceChildren();
-  contacts.length ? contacts.forEach(c => contactList.insertAdjacentHTML('beforeend', `<article class="record"><div><strong>${escape(c.name)}</strong><span class="meta">${escape(c.role || 'Contact')} · ${escape(c.email || 'Sans e-mail')}</span></div><span class="pill">${escape(c.company)}</span></article>`)) : contactList.append(empty());
+  contacts.length ? contacts.forEach(c => contactList.insertAdjacentHTML('beforeend', `<article class="record"><div><strong>${escape(c.name)}</strong><span class="meta">${escape(c.role || 'Contact')} · ${escape(c.email || 'Sans e-mail')}</span></div><div class="record-actions"><span class="pill">${escape(c.company)}</span><button class="open" data-open="${c.id}">Ouvrir</button></div></article>`)) : contactList.append(empty());
   ['interaction-contact','followup-contact'].forEach(id => { const el=document.getElementById(id); el.replaceChildren(...db.contacts.map(c => new Option(`${c.name} — ${c.company}`,c.id))); });
   const interactions=document.getElementById('interactions'); interactions.replaceChildren();
   const sorted=[...db.interactions].sort((a,b)=>b.date.localeCompare(a.date));
@@ -23,6 +24,17 @@ function render() {
   const today=new Date().toISOString().slice(0,10); const ordered=[...db.followups].sort((a,b)=>a.done-b.done || a.date.localeCompare(b.date));
   ordered.length ? ordered.forEach(f=>{ const c=byId(f.contactId); const overdue=!f.done && f.date<today; followups.insertAdjacentHTML('beforeend',`<article class="followup ${overdue?'overdue':''} ${f.done?'done':''}"><div><strong>${escape(f.title)}</strong><span class="meta">${escape(c?.name || 'Contact supprimé')} · ${date(f.date)}${overdue?' · En retard':''}</span></div>${f.done?'':`<button data-done="${f.id}">Terminer</button>`}</article>`); }) : followups.append(empty());
   document.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>{db.followups.find(f=>f.id===b.dataset.done).done=true;save();render();});
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{selectedContactId=b.dataset.open;render();document.getElementById('contact-detail').scrollIntoView({behavior:'smooth',block:'nearest'});});
+  renderContactDetail();
+}
+function renderContactDetail() {
+  const target=document.getElementById('contact-detail'); target.replaceChildren();
+  const contact=byId(selectedContactId); if (!contact) return;
+  const history=[...db.interactions].filter(i=>i.contactId===contact.id).sort((a,b)=>b.date.localeCompare(a.date));
+  const followups=[...db.followups].filter(f=>f.contactId===contact.id).sort((a,b)=>a.date.localeCompare(b.date));
+  target.insertAdjacentHTML('beforeend', `<article class="detail-card"><div class="detail-head"><div><p class="eyebrow">FICHE CONTACT</p><h3>${escape(contact.name)}</h3><span class="meta">${escape(contact.role || 'Contact')} · ${escape(contact.company)}</span></div><span class="pill">${escape(contact.email || 'Sans e-mail')}</span></div><div class="detail-grid"><section><h4>Historique des interactions</h4><div class="detail-list">${history.length ? history.map(i=>`<article class="event"><strong>${escape(i.type)}</strong><p>${escape(i.note)}</p><time>${date(i.date)}</time></article>`).join('') : '<p class="empty">Aucune interaction enregistrée.</p>'}</div></section><section><h4>Relances</h4><div class="detail-list">${followups.length ? followups.map(f=>`<div><strong>${escape(f.title)}</strong><span class="meta"> · ${date(f.date)}${f.done?' · Terminée':''}</span></div>`).join('') : '<p class="empty">Aucune relance planifiée.</p>'}</div></section></div><div class="detail-actions"><button class="close" id="close-detail">Fermer</button><button class="delete" id="delete-contact">Supprimer ce contact</button></div></article>`);
+  document.getElementById('close-detail').onclick=()=>{selectedContactId=null;render();};
+  document.getElementById('delete-contact').onclick=()=>{if(confirm(`Supprimer ${contact.name} et tout son historique ?`)){db.contacts=db.contacts.filter(c=>c.id!==contact.id);db.interactions=db.interactions.filter(i=>i.contactId!==contact.id);db.followups=db.followups.filter(f=>f.contactId!==contact.id);selectedContactId=null;save();render();}};
 }
 function escape(s) { const el=document.createElement('div'); el.textContent=s; return el.innerHTML; }
 document.getElementById('search').oninput=render;
