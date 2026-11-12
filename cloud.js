@@ -1,14 +1,14 @@
 /* Synchronisation facultative : aucune donnée envoyée sans connexion et import explicite. */
 (function(){
  const CFG='bb-crm-cloud-config-v1',DIRTY='bb-crm-cloud-pending-v1',IMPORT='bb-crm-precloud-data-v1';
- let client=null,user=null,busy=false,ready=false,remoteVersion=null,changed=false,timer=null;
+ let client=null,user=null,busy=false,ready=false,remoteVersion=null,changed=false,timer=null,editing=false;
  const el=id=>document.getElementById(id),notice=s=>{el('cloud-status').textContent=s};
  const valid=data=>data&&['contacts','interactions','followups'].every(k=>Array.isArray(data[k]));
  const copy=()=>structuredClone(db);
  const dirty=()=>localStorage.setItem(DIRTY,'1');
  const clearDirty=()=>localStorage.removeItem(DIRTY);
  const configured=()=>{try{return JSON.parse(localStorage.getItem(CFG)||'null')}catch{return null}};
- function renderState(){el('cloud-login').hidden=!client||!!user;el('cloud-actions').hidden=!user;el('cloud-setup').hidden=!!client;el('cloud-import').disabled=!user;el('cloud-refresh').disabled=!user}
+ function renderState(){el('cloud-login').hidden=!client||!!user;el('cloud-actions').hidden=!user;el('cloud-setup').hidden=!!client&&!editing;el('cloud-edit').hidden=!client||!!user||editing;el('cloud-import').disabled=!user;el('cloud-refresh').disabled=!user}
  async function init(){
    const cfg=configured();if(!cfg){notice('Mode local. Configurez Supabase pour synchroniser.');renderState();return}
    if(!window.supabase?.createClient){notice('Bibliothèque Supabase indisponible. Mode local uniquement.');return}
@@ -30,8 +30,10 @@
   if(!user||!ready)return;changed=true;if(busy)return;busy=true;
   try{
    while(changed){changed=false;let snapshot=copy();
-    const {data,error}=await client.from('crm_data').upsert({owner_id:user.id,payload:snapshot},{onConflict:'owner_id'}).select('updated_at').single();
-    if(error)throw error;remoteVersion=data.updated_at;clearDirty();
+    const timestamp=new Date().toISOString();
+    const query=remoteVersion===null?client.from('crm_data').insert({owner_id:user.id,payload:snapshot,updated_at:timestamp}):client.from('crm_data').update({payload:snapshot,updated_at:timestamp}).eq('owner_id',user.id).eq('updated_at',remoteVersion);
+    const {data,error}=await query.select('updated_at').maybeSingle();
+    if(error)throw error;if(!data)throw Error('La base a changé sur un autre appareil. Synchronisation arrêtée pour éviter un écrasement ; téléchargez une sauvegarde locale avant de résoudre le conflit.');remoteVersion=data.updated_at;clearDirty();
    }
    notice('Modifications enregistrées sur Supabase.');
   }catch(e){dirty();notice('Synchronisation échouée : '+e.message+' — copie locale conservée.')}finally{busy=false}
@@ -39,9 +41,12 @@
  window.crmCloudOnSave=()=>{if(!user||!ready)return;dirty();changed=true;upload()};
  el('cloud-config-form').onsubmit=async e=>{
   e.preventDefault();const url=el('cloud-url').value.trim().replace(/\/$/,'');const key=el('cloud-key').value.trim();
-  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!key){notice('URL Supabase ou clé publique invalide.');return}
-  localStorage.setItem(CFG,JSON.stringify({url,key}));client=null;user=null;ready=false;await init();
+  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)||!key){notice('Renseignez l’URL du projet (https://….supabase.co) et sa clé publique.');return}
+  let role='';try{role=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).role||''}catch{}
+  if(key.startsWith('sb_secret_')||role==='service_role'){notice('Cette clé est secrète. Utilisez uniquement la clé publishable ou anon.');return}
+  try{localStorage.setItem(CFG,JSON.stringify({url,key}));client=null;user=null;ready=false;editing=false;await init()}catch{notice('Impossible d’enregistrer la configuration dans ce navigateur.')}
  };
+ el('cloud-edit').onclick=()=>{const cfg=configured();editing=true;el('cloud-url').value=cfg?.url||'';el('cloud-key').value=cfg?.key||'';renderState();el('cloud-key').focus()};
  el('cloud-login-form').onsubmit=async e=>{
   e.preventDefault();if(!client)return;const email=el('cloud-email').value.trim(),password=el('cloud-password').value;
   if(db.contacts.length&&!localStorage.getItem(IMPORT))localStorage.setItem(IMPORT,JSON.stringify(copy()));
