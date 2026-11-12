@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Prototype CRM local pour contacts, entreprises, interactions et relances." />
+    <title>Pulse CRM</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div><p class="eyebrow">PROTOTYPE LOCAL</p><h1>Pulse CRM</h1></div>
+      <button id="reset-data" class="secondary">Réinitialiser la démo</button>
+    </header>
+    <main>
+      <section class="stats" aria-label="Indicateurs">
+        <article><span>Contacts</span><strong id="contact-count">0</strong></article>
+        <article><span>Entreprises</span><strong id="company-count">0</strong></article>
+        <article><span>Relances à venir</span><strong id="followup-count">0</strong></article>
+      </section>
+
+      <section class="layout">
+        <div class="panel wide">
+          <div class="section-head"><div><p class="eyebrow">RÉPERTOIRE</p><h2>Contacts & entreprises</h2></div><input id="search" type="search" placeholder="Rechercher…" aria-label="Rechercher" /></div>
+          <div id="contacts" class="records"></div>
+        </div>
+        <form id="contact-form" class="panel form">
+          <p class="eyebrow">NOUVEAU</p><h2>Ajouter un contact</h2>
+          <label>Nom<input name="name" required placeholder="Camille Martin" /></label>
+          <label>Entreprise<input name="company" required placeholder="Acme Studio" /></label>
+          <label>E-mail<input name="email" type="email" placeholder="camille@exemple.fr" /></label>
+          <label>Fonction<input name="role" placeholder="Direction commerciale" /></label>
+          <button>Enregistrer le contact</button>
+        </form>
+      </section>
+
+      <section class="layout lower">
+        <div class="panel wide">
+          <div class="section-head"><div><p class="eyebrow">SUIVI</p><h2>Interactions récentes</h2></div></div>
+          <div id="interactions" class="timeline"></div>
+        </div>
+        <form id="interaction-form" class="panel form">
+          <p class="eyebrow">NOUVELLE INTERACTION</p><h2>Tracer un échange</h2>
+          <label>Contact<select name="contactId" id="interaction-contact" required></select></label>
+          <label>Type<select name="type"><option>Appel</option><option>E-mail</option><option>Réunion</option><option>Note</option></select></label>
+          <label>Résumé<textarea name="note" required placeholder="Points abordés…"></textarea></label>
+          <button>Ajouter l’interaction</button>
+        </form>
+      </section>
+
+      <section class="layout lower">
+        <div class="panel wide">
+          <div class="section-head"><div><p class="eyebrow">À FAIRE</p><h2>Relances</h2></div><span class="hint">Triées par date</span></div>
+          <div id="followups" class="followups"></div>
+        </div>
+        <form id="followup-form" class="panel form">
+          <p class="eyebrow">NOUVELLE RELANCE</p><h2>Planifier une relance</h2>
+          <label>Contact<select name="contactId" id="followup-contact" required></select></label>
+          <label>Date<input name="date" type="date" required /></label>
+          <label>Objet<input name="title" required placeholder="Faire le point sur la proposition" /></label>
+          <button>Planifier</button>
+        </form>
+      </section>
+    </main>
+    <template id="empty"><p class="empty">Aucun élément pour le moment.</p></template>
+    <script src="app.js"></script>
+  </body>
+</html>
