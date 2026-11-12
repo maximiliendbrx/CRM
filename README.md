@@ -1,4 +1,4 @@
-# VNB CRM
+# B&B CRM
 
 Un CRM minimaliste et autonome pour suivre :
 
