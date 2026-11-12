@@ -1,4 +1,4 @@
-# Pulse CRM — prototype web
+# VNB CRM
 
 Un CRM minimaliste et autonome pour suivre :
 

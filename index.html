@@ -4,14 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Prototype CRM local pour contacts, entreprises, interactions et relances." />
-    <title>Pulse CRM</title>
+    <title>VNB CRM</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div><p class="eyebrow">PROTOTYPE LOCAL</p><h1>Pulse CRM</h1></div>
-      <button id="reset-data" class="secondary">Réinitialiser la démo</button>
-    </header>
+    <header class="topbar"><h1>VNB CRM</h1></header>
     <main>
       <section class="stats" aria-label="Indicateurs">
         <article><span>Contacts</span><strong id="contact-count">0</strong></article>
@@ -27,8 +24,9 @@
         </div>
         <form id="contact-form" class="panel form">
           <p class="eyebrow">NOUVEAU</p><h2>Ajouter un contact</h2>
-          <label>Nom<input name="name" required placeholder="Camille Martin" /></label>
+          <label>Nom et prénom<input name="name" required placeholder="Camille Martin" /></label>
           <label>Entreprise<input name="company" required placeholder="Acme Studio" /></label>
+          <label>Téléphone<input name="phone" type="tel" placeholder="06 12 34 56 78" /></label>
           <label>E-mail<input name="email" type="email" placeholder="camille@exemple.fr" /></label>
           <label>Fonction<input name="role" placeholder="Direction commerciale" /></label>
           <button>Enregistrer le contact</button>
