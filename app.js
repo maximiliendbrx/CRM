@@ -1,18 +1,5 @@
 const KEY = 'pulse-crm-v1';
-const seed = {
-  contacts: [
-    { id: 'c1', name: 'Sophie Laurent', company: 'Atelier Horizon', email: 'sophie@example.test', role: 'Fondatrice' },
-    { id: 'c2', name: 'Thomas Bernard', company: 'Nova Conseil', email: 'thomas@example.test', role: 'Directeur opérations' }
-  ],
-  interactions: [
-    { id: 'i1', contactId: 'c1', type: 'Réunion', note: 'Démo du prototype et besoins recensés.', date: '2026-11-10T10:00:00' },
-    { id: 'i2', contactId: 'c2', type: 'E-mail', note: 'Envoi du récapitulatif des prochaines étapes.', date: '2026-11-09T14:00:00' }
-  ],
-  followups: [
-    { id: 'f1', contactId: 'c1', date: '2026-11-15', title: 'Envoyer la proposition', done: false },
-    { id: 'f2', contactId: 'c2', date: '2026-11-20', title: 'Planifier un appel de suivi', done: false }
-  ]
-};
+const seed = { contacts: [], interactions: [], followups: [] };
 let db = JSON.parse(localStorage.getItem(KEY) || 'null') || structuredClone(seed);
 const byId = id => db.contacts.find(c => c.id === id);
 const save = () => localStorage.setItem(KEY, JSON.stringify(db));
