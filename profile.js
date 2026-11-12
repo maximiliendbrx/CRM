@@ -12,6 +12,7 @@ profile=function(){
   form.onsubmit=e=>{e.preventDefault();Object.assign(c,Object.fromEntries(new FormData(form)));save();render();$('contact-message').textContent='Modifications enregistrées.'};
   $('close').onclick=()=>{selected=null;render()};$('del').onclick=()=>{if(confirm(`Supprimer ${c.name} et tout son historique ?`)){db.contacts=db.contacts.filter(x=>x.id!==c.id);db.interactions=db.interactions.filter(i=>i.contactId!==c.id);db.followups=db.followups.filter(f=>f.contactId!==c.id);selected=null;save();render()}};
   const actions=document.createElement('section');actions.className='profile-create';actions.innerHTML='<h4>Ajouter pour ce contact</h4><div class="profile-create-buttons"><button type="button" data-action="classic">Nouvelle interaction</button><button type="button" data-action="first">Premier échange</button><button type="button" data-action="followup">Planifier une relance</button></div><div class="profile-create-form"></div>';form.after(actions);
+  if(history.some(i=>i.kind==='Premier échange'||(typeof i.note==='string'&&i.note.startsWith('Premier échange\n'))))actions.querySelector('[data-action="first"]').remove();
   const container=actions.querySelector('.profile-create-form');
   actions.querySelectorAll('[data-action]').forEach(button=>button.onclick=()=>{
     const mode=button.dataset.action;actions.querySelectorAll('[data-action]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
