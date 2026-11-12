@@ -19,7 +19,7 @@ Puis consulter `http://localhost:8000`.
 
 ## Stockage et confidentialité
 
-Les données sont stockées uniquement dans le `localStorage` du navigateur, sous la clé `pulse-crm-v1`. Le CRM démarre vide : aucune donnée commerciale personnelle ni aucun secret n'est inclus.
+Les données sont stockées uniquement dans le `localStorage` du navigateur, sous la clé `pulse-crm-v2`. Le CRM démarre vide : aucune donnée commerciale personnelle ni aucun secret n'est inclus.
 
 Ce choix convient à un prototype mono-utilisateur. Pour un usage partagé ou de production, remplacer ce stockage par une API authentifiée, une base de données avec contrôle d'accès et une politique de rétention.
 

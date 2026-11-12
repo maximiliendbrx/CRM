@@ -1,4 +1,6 @@
-const KEY = 'pulse-crm-v1';
+// A new storage namespace intentionally clears the former demonstration data once.
+// New entries are then retained normally when the page is refreshed.
+const KEY = 'pulse-crm-v2';
 const seed = { contacts: [], interactions: [], followups: [] };
 let db = JSON.parse(localStorage.getItem(KEY) || 'null') || structuredClone(seed);
 const byId = id => db.contacts.find(c => c.id === id);
