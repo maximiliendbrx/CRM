@@ -1,6 +1,6 @@
 /* Synchronisation facultative : aucune donnée envoyée sans connexion et import explicite. */
 (function(){
- const CFG='bb-crm-cloud-config-v1',DIRTY='bb-crm-cloud-pending-v1';
+ const CFG='bb-crm-cloud-config-v1',DIRTY='bb-crm-cloud-pending-v1',IMPORT='bb-crm-precloud-data-v1';
  let client=null,user=null,busy=false,ready=false,remoteVersion=null,changed=false,timer=null;
  const el=id=>document.getElementById(id),notice=s=>{el('cloud-status').textContent=s};
  const valid=data=>data&&['contacts','interactions','followups'].every(k=>Array.isArray(data[k]));
@@ -21,8 +21,9 @@
    const {data,error}=await client.from('crm_data').select('payload,updated_at').eq('owner_id',user.id).maybeSingle();if(error)throw error;
    if(localStorage.getItem(DIRTY)){notice('Des modifications locales ne sont pas synchronisées. Ne rechargez pas la base distante avant de résoudre le problème.');return}
    if(data){if(!valid(data.payload))throw Error('Format des données distantes invalide');
+    if(!localStorage.getItem(IMPORT)&&db.contacts.length)localStorage.setItem(IMPORT,JSON.stringify(copy()));
     db=structuredClone(data.payload);localStorage.setItem(KEY,JSON.stringify(db));remoteVersion=data.updated_at;selected=null;render();ready=true;notice('Synchronisé avec Supabase — '+db.contacts.length+' contact(s).');
-   }else{remoteVersion=null;ready=true;notice('Base cloud vide. Sur le PC contenant les contacts, utilisez « Importer les données locales ».');}
+   }else{remoteVersion=null;ready=true;notice('Base cloud vide. Les contacts locaux sont conservés : importez-les depuis le PC qui les contient.');}
   }catch(e){notice('Lecture distante impossible : '+e.message)}finally{busy=false}
  }
  async function upload(){
@@ -43,15 +44,18 @@
  };
  el('cloud-login-form').onsubmit=async e=>{
   e.preventDefault();if(!client)return;const email=el('cloud-email').value.trim(),password=el('cloud-password').value;
+  if(db.contacts.length&&!localStorage.getItem(IMPORT))localStorage.setItem(IMPORT,JSON.stringify(copy()));
   const {data,error}=await client.auth.signInWithPassword({email,password});el('cloud-password').value='';
   if(error){notice('Connexion refusée : '+error.message);return}
   user=data.user;ready=false;renderState();await load();
  };
  el('cloud-import').onclick=async()=>{
   if(!user||!ready)return;
-  if(!confirm('Importer les données présentes dans CE navigateur vers le cloud ? Faites-le depuis le PC qui contient les contacts. En cas de base distante déjà renseignée, son contenu pourrait être remplacé.'))return;
+  if(!confirm('Importer les données sauvegardées sur CET ordinateur vers le cloud ? Faites-le depuis le PC qui contient vos contacts.'))return;
   if(remoteVersion){notice('Import bloqué : le cloud contient déjà des données. Ne pas remplacer sans sauvegarde et fusion contrôlée.');return}
-  dirty();changed=true;await upload();
+  const original=localStorage.getItem(IMPORT);if(original){try{const parsed=JSON.parse(original);if(valid(parsed))db=parsed}catch{}}
+  if(!valid(db)){notice('Données locales invalides. Import annulé.');return}
+  localStorage.setItem(KEY,JSON.stringify(db));render();dirty();changed=true;await upload();
  };
  el('cloud-refresh').onclick=async()=>{if(!confirm('Charger la base distante ? Les données locales non importées pourraient être remplacées.'))return;await load()};
  el('cloud-logout').onclick=async()=>{if(!client)return;await client.auth.signOut();user=null;ready=false;renderState();notice('Déconnecté. Les données locales restent sur cet appareil.')};
