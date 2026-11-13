@@ -2,6 +2,8 @@
 const companyKey=name=>String(name||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr');
 let selectedCompany=null;
 function companyDirectory(){const map=new Map();for(const company of (Array.isArray(db.companies)?db.companies:[])){const key=companyKey(company.name);if(key&&!map.has(key))map.set(key,{...company})}for(const contact of db.contacts){const key=companyKey(contact.company);if(key&&!map.has(key))map.set(key,{name:contact.company.trim()})}return map}
+function ensureCompany(name){const key=companyKey(name);if(!key)return '';const found=companyDirectory().get(key),canonical=found?.name||String(name).trim().replace(/\s+/g,' ');if(!Array.isArray(db.companies))db.companies=[];if(!db.companies.some(c=>companyKey(c.name)===key))db.companies.push({id:crypto.randomUUID(),name:canonical});return canonical}
+function updateCompanySuggestions(){let list=$('company-suggestions');if(!list){list=document.createElement('datalist');list.id='company-suggestions';document.body.append(list)}list.replaceChildren(...[...companyDirectory().values()].sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(company=>new Option(company.name,company.name)));document.querySelectorAll('#contact-form [name="company"],#edit-contact [name="company"],#interaction-form [name="newCompany"],#coldcall-form [name="company"]').forEach(input=>{input.setAttribute('list','company-suggestions');input.setAttribute('autocomplete','off');input.placeholder='Rechercher ou saisir une nouvelle entreprise'})}
 function companyContacts(key){return db.contacts.filter(c=>companyKey(c.company)===key)}
 companies=function(){
  const directory=companyDirectory(),body=$('companies-table');body.replaceChildren();
@@ -21,4 +23,4 @@ function renderCompanyProfile(target,company,key,contacts,directory){
  card.querySelector('.company-close').onclick=()=>{selectedCompany=null;companies()};
 }
 $('company-create').onsubmit=e=>{e.preventDefault();const name=e.target.elements.name.value.trim(),message=$('company-create-message');if(!name){message.textContent='Renseignez le nom de l’entreprise.';return}if(companyDirectory().has(companyKey(name))){message.textContent='Cette entreprise existe déjà.';return}db.companies=Array.isArray(db.companies)?db.companies:[];db.companies.push({id:crypto.randomUUID(),name});selectedCompany=companyKey(name);save();e.target.reset();render();message.textContent='Entreprise créée.'};
-render();
+const renderBeforeCompanySuggestions=render;render=function(){renderBeforeCompanySuggestions();updateCompanySuggestions()};render();
