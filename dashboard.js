@@ -7,7 +7,8 @@ function drawDashboard(){
   const inMonth=value=>{const d=new Date(value);return Number.isFinite(d.getTime())&&d>=monthStart&&d<monthEnd};
   const recentStart=days[0].day;
   $('new-contact-count').textContent=db.contacts.filter(c=>c.createdAt&&new Date(c.createdAt)>=recentStart&&new Date(c.createdAt)<=now).length;
-  const calls=db.interactions.filter(i=>i.type==='Appel');
+  const coldCalls=Array.isArray(db.coldCalls)?db.coldCalls:[],coldIds=new Set(coldCalls.map(call=>call.id));
+  const calls=[...coldCalls,...db.interactions.filter(i=>i.type==='Appel'&&!coldIds.has(i.coldCallId))];
   calls.forEach(i=>{const d=new Date(i.date);if(!Number.isFinite(d.getTime())||d>now)return;const day=days.find(x=>x.key===chartDate(d));if(day)day.count++});
   const chart=$('weekly-chart');chart.replaceChildren();const max=Math.max(1,...days.map(d=>d.count));
   days.forEach(d=>{const col=document.createElement('div');col.className='chart-column';const value=document.createElement('span');value.className='chart-value';value.textContent=d.count;const bar=document.createElement('div');bar.className='chart-bar';bar.style.height=`${d.count?Math.max(5,d.count/max*100):0}%`;const track=document.createElement('div');track.className='chart-track';track.append(bar);const label=document.createElement('span');label.className='chart-label';label.textContent=new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric'}).format(d.day);col.append(value,track,label);chart.append(col)});
