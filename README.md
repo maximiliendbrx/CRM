@@ -8,7 +8,7 @@ Un CRM minimaliste et autonome pour suivre :
 
 ## Démarrer
 
-Ce prototype n'a aucune dépendance. Ouvrir `index.html` dans un navigateur, ou lancer :
+Le site peut être servi par un hébergement statique HTTPS, ou lancé localement :
 
 ```bash
 cd crm-prototype
@@ -20,6 +20,8 @@ Puis consulter `http://localhost:8000`.
 ## Stockage et confidentialité
 
 Les données sont stockées uniquement dans le `localStorage` du navigateur, sous la clé `pulse-crm-v2`. Le CRM démarre vide : aucune donnée commerciale personnelle ni aucun secret n'est inclus.
+
+Dans Paramètres, le téléchargement d'une sauvegarde produit un ZIP contenant le code actuel dans `site/`, les données de la sauvegarde dans `donnees-privees/` et un guide de réinstallation. Publiez uniquement `site/` : ne publiez jamais le dossier de données privées. Après publication, importez le fichier JSON privé dans Paramètres > Sauvegardes. Le ZIP n'inclut ni identifiants Supabase, ni sauvegarde du projet Supabase lui-même. La liste `SITE_FILES` dans `backup-bundle.js` doit être mise à jour lorsqu'un fichier nécessaire au site est ajouté.
 
 Ce choix convient à un prototype mono-utilisateur. Pour un usage partagé ou de production, remplacer ce stockage par une API authentifiée, une base de données avec contrôle d'accès et une politique de rétention.
 

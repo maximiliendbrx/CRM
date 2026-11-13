@@ -1,0 +1,21 @@
+const SITE_FILES=['index.html','styles.css','app.js','settings.js','profile.js','cloud.js','dashboard.js','first-exchange.js','reports.js','companies.js','backup-bundle.js','README.md','supabase-schema.sql','vendor/jszip.min.js','vendor/JSZIP-LICENSE.txt'];
+const BUNDLE_GUIDE=`B&B CRM — sauvegarde complète
+
+Le dossier site/ contient le code de la version actuelle du site au moment du téléchargement. Il ne s'agit pas nécessairement de la version du code en vigueur à la date de la sauvegarde des données.
+
+Le dossier donnees-privees/ contient les données personnelles et commerciales de la sauvegarde choisie. NE PUBLIEZ JAMAIS ce dossier ni le ZIP complet sur un hébergement public ou dans un dépôt public.
+
+Pour réinstaller :
+1. Décompressez le ZIP sur votre ordinateur.
+2. Publiez uniquement le contenu du dossier site/ sur un hébergement de site statique HTTPS. La procédure exacte dépend de la plateforme.
+3. Ouvrez votre nouveau site, puis Paramètres > Sauvegardes > Importer une sauvegarde. Choisissez le fichier donnees-privees/donnees.json depuis votre ordinateur.
+4. Si vous utilisez Supabase, configurez séparément votre projet et connectez-vous. Aucune clé, session ou mot de passe Supabase n'est inclus dans ce ZIP. Les données importées remplacent les données locales et, si la synchronisation est active, peuvent être envoyées à Supabase.
+
+Les données locales appartiennent au navigateur et à l'adresse du site : elles ne suivent pas automatiquement un changement de domaine. Le code optionnel Supabase nécessite l'accès à son service et à sa bibliothèque CDN. Le fichier supabase-schema.sql contient la structure de base, pas vos identifiants ni une sauvegarde du projet Supabase.
+`;
+async function downloadSiteBackup(backup,button){
+ const message=$('backup-message');button.disabled=true;message.textContent='Préparation du ZIP complet…';
+ try{if(typeof JSZip==='undefined')throw Error('La bibliothèque de compression est indisponible.');const zip=new JSZip();await Promise.all(SITE_FILES.map(async path=>{const response=await fetch(new URL(path,document.baseURI),{cache:'no-store'});if(!response.ok)throw Error(`Fichier du site inaccessible : ${path} (${response.status})`);zip.file('site/'+path,await response.arrayBuffer())}));zip.file('donnees-privees/donnees.json',JSON.stringify({version:1,createdAt:backup.createdAt,data:backup.data},null,2));zip.file('LISEZ-MOI.txt',BUNDLE_GUIDE);const blob=await zip.generateAsync({type:'blob'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`bb-crm-complet-${backup.createdAt.replace(/[:.]/g,'-')}.zip`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);message.textContent='ZIP téléchargé : publiez uniquement le dossier site, jamais les données privées.'}catch(error){message.textContent='Téléchargement impossible : '+error.message}finally{button.disabled=false}
+}
+function validBackupData(data){const string=(v)=>typeof v==='string';return data&&typeof data==='object'&&Array.isArray(data.contacts)&&data.contacts.every(c=>c&&string(c.id)&&string(c.name)&&string(c.company))&&Array.isArray(data.interactions)&&data.interactions.every(i=>i&&string(i.id)&&string(i.contactId)&&string(i.type)&&string(i.note)&&string(i.date)&&!Number.isNaN(Date.parse(i.date)))&&Array.isArray(data.followups)&&data.followups.every(f=>f&&string(f.id)&&string(f.contactId)&&string(f.date)&&/^\d{4}-\d{2}-\d{2}$/.test(f.date)&&string(f.title))&&(!('companies'in data)||(Array.isArray(data.companies)&&data.companies.every(c=>c&&string(c.name))))}
+$('backup-import').onchange=async e=>{const file=e.target.files[0],message=$('backup-message');if(!file)return;try{const backup=JSON.parse(await file.text());if(backup.version!==1||!validBackupData(backup.data))throw Error('Fichier de sauvegarde invalide ou non pris en charge.');if(!confirm('Importer cette sauvegarde remplacera les données actuelles de ce navigateur. Si Supabase est connecté, elles pourront aussi être synchronisées. Continuer ?'))return;if(!createBackup('manual'))return;db=structuredClone(backup.data);save();selected=null;render();message.textContent='Sauvegarde importée. Une copie des données précédentes a été conservée dans ce navigateur.'}catch(error){message.textContent='Import impossible : '+error.message}finally{e.target.value=''}};
