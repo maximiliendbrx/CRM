@@ -72,4 +72,5 @@ main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;paddin
 #home-followups .followup.overdue .followup-title{color:#9f3028}
 #home-followups .overdue-badge{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:999px;background:#fbe2df;color:#9f3028;font-size:11px;font-weight:800}
 #home-followups .followup:not(.overdue){background:rgba(25,157,120,var(--followup-tint,.03));border-left:5px solid #279b76}
+.coldcall-actions .coldcall-edit-button{margin:0;padding:6px;background:transparent;color:#64829a}.coldcall-actions .coldcall-edit-button:hover{background:#e8f7f1;color:#168f6b}.coldcall-edit-dialog{max-height:calc(100dvh - 32px);overflow-y:auto}.coldcall-edit .check-label input{width:auto}.coldcall-edit .hint{margin-top:12px}
 .followup button.followup-title{display:block;background:transparent;color:#168f6b;text-align:left;font-size:14px;font-weight:750;padding:0;margin:0}.followup button.followup-title:hover{text-decoration:underline}
