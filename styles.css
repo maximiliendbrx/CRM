@@ -68,4 +68,7 @@ main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;paddin
  .company-contact-list{overflow-x:auto}.company-contact-list table{min-width:650px}
 }
 @media(max-width:360px){.stats{grid-template-columns:1fr}.followup{flex-wrap:wrap}}
+#home-followups .followup.overdue{background:#fff5f3;border-color:#f2c7c2;border-left:5px solid #cb4338}
+#home-followups .followup.overdue .followup-title{color:#9f3028}
+#home-followups .overdue-badge{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:999px;background:#fbe2df;color:#9f3028;font-size:11px;font-weight:800}
 .followup button.followup-title{display:block;background:transparent;color:#168f6b;text-align:left;font-size:14px;font-weight:750;padding:0;margin:0}.followup button.followup-title:hover{text-decoration:underline}
