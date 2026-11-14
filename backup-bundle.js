@@ -1,4 +1,4 @@
-const SITE_FILES=['index.html','styles.css','app.js','settings.js','profile.js','cloud.js','dashboard.js','first-exchange.js','reports.js','companies.js','backup-bundle.js','coldcalls.js','projects.js','README.md','supabase-schema.sql','vendor/jszip.min.js','vendor/JSZIP-LICENSE.txt'];
+const SITE_FILES=['index.html','styles.css','app.js','settings.js','profile.js','cloud.js','dashboard.js','first-exchange.js','reports.js','companies.js','backup-bundle.js','coldcalls.js','coldcall-reopen.js','projects.js','README.md','supabase-schema.sql','vendor/jszip.min.js','vendor/JSZIP-LICENSE.txt'];
 const BUNDLE_GUIDE=`B&B CRM — sauvegarde complète
 
 Le dossier site/ contient le code de la version actuelle du site au moment du téléchargement. Il ne s'agit pas nécessairement de la version du code en vigueur à la date de la sauvegarde des données.
