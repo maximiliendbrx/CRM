@@ -40,4 +40,32 @@ button{background:#1b9c77;border-radius:7px}.contact-link{color:#188f70}.nav{bac
 .followup-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}.followup .followup-edit{background:transparent;color:#64829a;padding:6px}.followup .followup-edit:hover{background:#e8f7f1;color:#168f6b}.followup-dialog form label{margin-top:16px}.followup-dialog form input{margin-top:5px}
 .list-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.list-filters label,.sector-filter{margin:0;min-width:200px}.list-filters select,.sector-filter select{display:block;margin-top:5px}.sector-filter{display:block;max-width:300px;margin-top:22px}@media(max-width:760px){.list-filters{width:100%}.list-filters label{width:100%}}
 .existing-picker{display:block;margin-top:7px}.existing-picker select{width:100%;margin:0;padding:8px 10px;color:#526d86;background:#f6faf8;border-color:#dcebe4;font-size:13px;font-weight:500}.existing-picker select:disabled{color:#8293a2;background:#f2f5f7}
+
+/* Mise en page fluide sur les écrans larges et les formats mobiles. */
+main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;padding-left:clamp(20px,3vw,48px);padding-right:clamp(20px,3vw,48px)}
+.view,.panel,.grid>*,.dashboard-analytics>*,.stats>*,.form-grid>*,.contact-fields>*{min-width:0}
+.table-wrap,.company-contact-list{max-width:100%}
+@media(min-width:761px) and (max-width:1100px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid,.contact-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-analytics{grid-template-columns:1fr}.profile-grid{grid-template-columns:1fr}}
+@media(max-width:760px){
+ main{width:100%;min-height:calc(100vh - 100px);padding:24px 16px 40px}
+ .topbar{width:100%}.topbar nav{max-width:100%;overscroll-behavior-x:contain}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-analytics,.form-grid,.contact-fields,.profile-grid{grid-template-columns:1fr}
+ .list-filters,#search{width:100%}.followup-actions{gap:4px}.followup{gap:10px}
+}
+@media(max-width:1100px){
+ #contacts-view .table-wrap,#companies-view>.table-wrap{overflow:visible;background:transparent;border:0;box-shadow:none}
+ #contacts-view .table-wrap>table,#companies-view>.table-wrap>table{display:block;width:100%;min-width:0}
+ #contacts-view .table-wrap>table>thead,#companies-view>.table-wrap>table>thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ #contacts-table,#companies-table{display:block}
+ #contacts-table>tr:not(.contact-expanded-row),#companies-table>tr:not(.company-expanded-row){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin-top:12px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:10px}
+ #contacts-table>tr:not(.contact-expanded-row)>td,#companies-table>tr:not(.company-expanded-row)>td{display:block;min-width:0;padding:0;border:0;overflow-wrap:anywhere}
+ #contacts-table>tr:not(.contact-expanded-row)>td:first-child,#companies-table>tr:not(.company-expanded-row)>td:first-child{grid-column:1/-1}
+ #contacts-table>tr:not(.contact-expanded-row)>td:not(:first-child)::before,#companies-table>tr:not(.company-expanded-row)>td:not(:first-child)::before{display:block;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:2px}
+ #contacts-table>tr:not(.contact-expanded-row)>td:nth-child(2)::before{content:'Entreprise'}#contacts-table>tr:not(.contact-expanded-row)>td:nth-child(3)::before{content:'Téléphone'}#contacts-table>tr:not(.contact-expanded-row)>td:nth-child(4)::before{content:'E-mail'}#contacts-table>tr:not(.contact-expanded-row)>td:nth-child(5)::before{content:'Fonction'}#contacts-table>tr:not(.contact-expanded-row)>td:nth-child(6)::before{content:'Dernier contact'}#contacts-table>tr:not(.contact-expanded-row)>td:nth-child(7)::before{content:'Prochaine relance'}
+ #companies-table>tr:not(.company-expanded-row)>td:nth-child(2)::before{content:'Contacts'}#companies-table>tr:not(.company-expanded-row)>td:nth-child(3)::before{content:'Dernière interaction'}#companies-table>tr:not(.company-expanded-row)>td:nth-child(4)::before{content:'Prochaine relance'}
+ .contact-expanded-row,.company-expanded-row,.contact-expanded-row>td,.company-expanded-row>td{display:block;width:100%;min-width:0}
+ .contact-expanded-row>td,.company-expanded-row>td{padding:0;border:0}.contact-expanded-row .profile,.company-profile{padding:20px 16px;border-radius:0 0 10px 10px}
+ .company-contact-list{overflow-x:auto}.company-contact-list table{min-width:650px}
+}
+@media(max-width:360px){.stats{grid-template-columns:1fr}.followup{flex-wrap:wrap}}
 .followup button.followup-title{display:block;background:transparent;color:#168f6b;text-align:left;font-size:14px;font-weight:750;padding:0;margin:0}.followup button.followup-title:hover{text-decoration:underline}
