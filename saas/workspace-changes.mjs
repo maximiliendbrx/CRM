@@ -47,7 +47,7 @@ export function planWorkspaceChanges(baseline, records, desired, makeId=()=>glob
   const ids=new Set();for(const item of desired[source]){
    if(!item?.id||ids.has(item.id))throw Error('Élément invalide ou dupliqué dans '+source);ids.add(item.id);
    const contact=item.contactId?desiredContacts.get(item.contactId):null;
-   if(item.contactId&&!contact||source!=='coldCalls'&&!contact)throw Error('Contact manquant dans '+source+' : modification non envoyée');
+   if((source==='interactions'||source==='followups')&&!contact)throw Error('Contact manquant dans '+source+' : modification non envoyée');
    const cols={contact_id:contact||null};
    if(source==='projects'){const company=companyFor(item.companyName||desired.contacts.find(c=>c.id===item.contactId)?.company);if(!company)throw Error('Entreprise manquante dans un projet');cols.company_id=company}
    create(table,item,cols);

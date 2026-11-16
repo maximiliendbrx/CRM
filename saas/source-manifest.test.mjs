@@ -1,0 +1,3 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readdir} from 'node:fs/promises';import {SOURCE_FILES} from './dev/source-manifest.mjs';
+async function files(dir,prefix='saas'){const entries=await readdir(dir,{withFileTypes:true}),result=[];for(const e of entries){const path=prefix+'/'+e.name;if(e.isDirectory())result.push(...await files(new URL(e.name+'/',dir),path));else if(e.isFile())result.push(path)}return result}
+test('la liste de code sauvegarde tous les fichiers SaaS et reste sans doublon',async()=>{const actual=(await files(new URL('./',import.meta.url))).sort(),listed=SOURCE_FILES.filter(x=>x.startsWith('saas/')).sort();assert.deepEqual(listed,actual);assert.equal(SOURCE_FILES.length,new Set(SOURCE_FILES).size)});
