@@ -53,6 +53,7 @@ export const SOURCE_FILES = [
  "saas/migrations/006_workspace_settings.sql",
  "saas/migrations/007_preserve_project_history.sql",
  "saas/migrations/008_workspace_member_directory.sql",
+ "saas/migrations/009_platform_admin.sql",
  "saas/source-manifest.test.mjs",
  "saas/tests/invitation-concurrency.mjs",
  "saas/tests/legacy-live-browser.cjs",
