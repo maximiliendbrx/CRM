@@ -13,7 +13,7 @@
  function save(){if(blocked)return;queued={data:structuredClone(db),sequence:++sequence};port.postMessage({type:'dirty',data:queued.data,sequence:queued.sequence});show('Enregistrement en cours…');sendNext()}
  download.onclick=()=>{const entry=queued||lastSent;if(!entry)return;const data=entry.data;const blob=new Blob([JSON.stringify({version:1,data},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='crm-modifications-non-synchronisees.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
  reload.onclick=()=>{if(!confirm('Abandonner les modifications non synchronisées et recharger les données enregistrées ? Téléchargez-les d’abord si nécessaire.'))return;show('Rechargement…');port.postMessage({type:'reload'})};
- function start(data,channel){
+ function start(data,channel,name){
   port=channel;const items=new Map([['pulse-crm-v2',JSON.stringify(data)],['bb-crm-settings-v1',JSON.stringify(data.__saas_settings||{})],['bb-crm-goals-v1',JSON.stringify(data.__saas_goals||{})]]);
   const memory={getItem:k=>items.has(String(k))?items.get(String(k)):null,setItem:(k,v)=>{k=String(k);items.set(k,String(v));if(ready&&(k==='bb-crm-settings-v1'||k==='bb-crm-goals-v1')){db[k==='bb-crm-settings-v1'?'__saas_settings':'__saas_goals']=JSON.parse(v);save()}},removeItem:k=>items.delete(String(k)),clear:()=>items.clear(),key:i=>[...items.keys()][i]??null,get length(){return items.size}};
   Object.defineProperty(window,'localStorage',{value:memory,configurable:false,writable:false});
@@ -28,8 +28,8 @@
    else if(message.type==='access-lost'){blocked=true;show('Session interrompue. Téléchargez les modifications non synchronisées.',true)}
   };
   const load=src=>new Promise((resolve,reject)=>{const tag=document.createElement('script');tag.src=src;tag.onload=resolve;tag.onerror=()=>reject(Error('Ressource indisponible'));document.body.append(tag)});
-  (async()=>{for(const src of scripts)await load(src);const section=document.createElement('section');section.className='panel form';const heading=document.createElement('h3');heading.textContent='Collaborateurs';const manage=document.createElement('button');manage.type='button';manage.textContent='Gérer les collaborateurs';manage.onclick=()=>port.postMessage({type:'manage-members'});section.append(heading,manage);document.getElementById('settings-view').prepend(section);document.body.append(overlay);ready=true;port.postMessage({type:'loaded'})})().catch(()=>port.postMessage({type:'load-error'}));
+  (async()=>{for(const src of scripts)await load(src);document.querySelector('.topbar h1').textContent=typeof name==='string'&&name.trim()?name:'CRM';const section=document.createElement('section');section.className='panel form';const heading=document.createElement('h3');heading.textContent='Collaborateurs';const manage=document.createElement('button');manage.type='button';manage.textContent='Gérer les collaborateurs';manage.onclick=()=>port.postMessage({type:'manage-members'});section.append(heading,manage);document.getElementById('settings-view').prepend(section);document.body.append(overlay);ready=true;port.postMessage({type:'loaded'})})().catch(()=>port.postMessage({type:'load-error'}));
  }
- addEventListener('message',event=>{if(started||event.source!==parent||event.origin!==new URL(document.baseURI).origin||event.data?.type!=='crm-live-start'||event.ports.length!==1)return;event.stopImmediatePropagation();started=true;start(event.data.data,event.ports[0])},true);
+ addEventListener('message',event=>{if(started||event.source!==parent||event.origin!==new URL(document.baseURI).origin||event.data?.type!=='crm-live-start'||event.ports.length!==1)return;event.stopImmediatePropagation();started=true;start(event.data.data,event.ports[0],event.data.name)},true);
  parent.postMessage({type:'crm-live-ready'},'*');
 })();

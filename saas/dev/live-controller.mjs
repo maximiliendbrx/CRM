@@ -1,11 +1,11 @@
 // Coordination du modèle authentifié avec l'interface historique isolée.
 import {WorkspaceModel} from '../workspace-model.mjs';
-import {createLegacyLive} from './legacy-live.mjs';
+import {createLegacyLive} from './legacy-live.mjs?v=2';
 import {LocalBackupStore} from './backup-store.mjs';
 import {buildBackupArchive} from './backup-zip.mjs';
 export class LiveController {
- #frame;#model;#snapshot;#port=null;#handler=null;#pending=null;#latestSequence=0;#disposed=false;#onState;#backups;#base;#probes=new Map();#probeId=0;
- constructor({frame,client,workspace,userId,onState=()=>{}}){this.#frame=frame;this.#model=new WorkspaceModel(client,workspace,userId);this.#backups=new LocalBackupStore({client,workspace,userId});this.#onState=onState}
+ #frame;#model;#snapshot;#name;#port=null;#handler=null;#pending=null;#latestSequence=0;#disposed=false;#onState;#backups;#base;#probes=new Map();#probeId=0;
+ constructor({frame,client,workspace,userId,workspaceName,onState=()=>{}}){this.#frame=frame;this.#name=workspaceName||'CRM';this.#model=new WorkspaceModel(client,workspace,userId);this.#backups=new LocalBackupStore({client,workspace,userId});this.#onState=onState}
  get hasPending(){return this.#pending!==null}
  getPending(){return this.#pending?structuredClone(this.#pending):null}
  async capturePending(){if(!this.#port||this.#disposed)return this.getPending();const id=++this.#probeId;return new Promise(resolve=>{const timer=setTimeout(()=>{this.#probes.delete(id);resolve(this.getPending())},1500);this.#probes.set(id,data=>{clearTimeout(timer);resolve(data||this.getPending())});this.#port.postMessage({type:'capture',id})})}
@@ -13,7 +13,7 @@ export class LiveController {
   this.#base=base;this.#snapshot=await this.#model.load();if(this.#disposed)throw Error('Espace fermé');
   this.#handler=event=>{
    if(this.#disposed||event.source!==this.#frame.contentWindow||event.origin!=='null'||event.data?.type!=='crm-live-ready'||this.#port)return;
-   const channel=new MessageChannel();this.#port=channel.port1;this.#port.onmessage=e=>void this.#handle(e.data);this.#frame.contentWindow.postMessage({type:'crm-live-start',data:this.#snapshot},'*',[channel.port2]);this.#snapshot=null;
+   const channel=new MessageChannel();this.#port=channel.port1;this.#port.onmessage=e=>void this.#handle(e.data);this.#frame.contentWindow.postMessage({type:'crm-live-start',data:this.#snapshot,name:this.#name},'*',[channel.port2]);this.#snapshot=null;
   };
   addEventListener('message',this.#handler);this.#frame.srcdoc=createLegacyLive(html,base);this.#frame.hidden=false;
  }
