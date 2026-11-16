@@ -76,7 +76,7 @@ En cas d'échec avant ouverture aux utilisateurs, garder `main` et l'ancienne ba
 
 ## Préparation de l'import de sauvegarde
 
-`import-plan.mjs` prépare localement les lignes sans effectuer de connexion ni modifier la sauvegarde. Il conserve les objets d'origine dans `data`, résout les entreprises par nom normalisé, garde les cold calls indépendants, et refuse les références absentes et les noms d'entreprise ambigus. Les éléments non reconnus, dont les catalogues, sont gardés dans `settings.legacy_extra`. Les objectifs et paramètres absents du ZIP ne peuvent pas être reconstitués.
+`import-plan.mjs` prépare localement les lignes sans effectuer de connexion ni modifier la sauvegarde. Il conserve les objets d'origine dans `data`, résout les entreprises par nom normalisé, garde les cold calls indépendants, et refuse les références absentes pour les interactions et relances ainsi que les noms d'entreprise ambigus. Les projets et cold calls peuvent conserver les informations historiques d'un contact supprimé. Les éléments non reconnus, dont les catalogues, sont gardés dans `settings.legacy_extra`. Les objectifs et paramètres absents du ZIP ne peuvent pas être reconstitués.
 
 `003_workspace_import.sql` ajoute une fonction transactionnelle réservée au propriétaire d'un CRM vide : insertion des collections et des paramètres ou annulation intégrale en cas d'erreur, avec refus d'un second import. Ne pas l'exécuter en production avant intégration, audit et essais Supabase. Le plan n'est pas encore connecté à une interface d'import, et cette fonction ne résout pas la synchronisation collaborative des écrans existants.
 

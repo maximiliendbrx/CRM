@@ -30,7 +30,7 @@ export function buildImportPlan(backup, uuid = () => globalThis.crypto.randomUUI
   }
   const linked = (kind, required = false) => (data[kind] || []).map(payload => {
     const contact = payload.contactId ? contactById.get(payload.contactId) : null;
-    if (payload.contactId && !contact) throw Error(`Contact introuvable dans ${kind}.`);
+    if (payload.contactId && !contact && !['coldCalls','projects'].includes(kind)) throw Error(`Contact introuvable dans ${kind}.`);
     if (required && !contact) throw Error(`Contact manquant dans ${kind} : traitement manuel nécessaire.`);
     const row = {id:uuid(),legacy_id:payload.id,contact_id:contact?.id || null,data:clone(payload)};
     if (kind === 'projects') {
@@ -40,7 +40,7 @@ export function buildImportPlan(backup, uuid = () => globalThis.crypto.randomUUI
     }
     return row;
   });
-  const interactions=linked('interactions',true), cold_calls=linked('coldCalls'), reminders=linked('followups',true), projects=linked('projects',true);
+  const interactions=linked('interactions',true), cold_calls=linked('coldCalls'), reminders=linked('followups',true), projects=linked('projects');
   // Conserver les extensions inconnues au même titre que les catalogues historiques.
   const extra = Object.fromEntries(Object.entries(data).filter(([name])=>!['companies','contacts','interactions','coldCalls','followups','projects'].includes(name)));
   return {companies,contacts,interactions,cold_calls,reminders,projects,settings:{legacy_extra:clone(extra)}};
