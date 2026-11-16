@@ -1,0 +1,11 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {WorkspaceWriter} from './workspace-writer.mjs';
+const W='10000000-0000-0000-0000-000000000001';const changes=[{table:'contacts',action:'update',id:'10000000-0000-0000-0000-000000000002',expected_version:3,row:{name:'Test',data:{name:'Test'}}}];
+const make=rpc=>({rpc,auth:{getUser:async()=>({data:{user:{id:'a'}}})}});
+test('envoie un lot borné à l’espace et conserve la version du serveur',async()=>{const w=new WorkspaceWriter(make(async(n,args)=>{assert.equal(n,'apply_workspace_changes');assert.equal(args.p_workspace,W);assert.deepEqual(args.p_changes,changes);return{data:[{record:{version:4}}]}}),W,'a');assert.equal((await w.apply(changes))[0].record.version,4)});
+test('refuse un compte différent avant envoi',async()=>{let called=false;const w=new WorkspaceWriter(make(async()=>{called=true}),W,'b');await assert.rejects(w.apply(changes),/avant envoi/);assert.equal(called,false)});
+test('refuse deux envois simultanés',async()=>{let release;const w=new WorkspaceWriter(make(async()=>new Promise(resolve=>release=resolve)),W,'a');const p=w.apply(changes);await new Promise(resolve=>setImmediate(resolve));await assert.rejects(w.apply(changes),/déjà en cours/);release({data:[{}]});await p});
+test('un conflit serveur est transmis et ne provoque pas de nouvelle tentative',async()=>{let calls=0;const w=new WorkspaceWriter(make(async()=>{calls++;return{error:{message:'Conflit'}}}),W,'a');await assert.rejects(w.apply(changes),/Conflit/);assert.equal(calls,1)});
+test('indique un résultat incertain si le réseau se coupe après envoi',async()=>{const w=new WorkspaceWriter(make(async()=>{throw new TypeError('Failed to fetch')}),W,'a');await assert.rejects(w.apply(changes),/résultat incertain/)});
+test('signale un résultat à vérifier si la session change après l’envoi',async()=>{let n=0;const c=make(async()=>({data:[{}]}));c.auth.getUser=async()=>({data:{user:{id:++n===1?'a':'b'}}});const w=new WorkspaceWriter(c,W,'a');await assert.rejects(w.apply(changes),/résultat à vérifier/)});
+
+test('les erreurs réseau renvoyées par le client sont aussi considérées incertaines',async()=>{const w=new WorkspaceWriter(make(async()=>({error:{message:'TypeError: Failed to fetch'}})),W,'a');await assert.rejects(w.apply(changes),/résultat incertain/)});
