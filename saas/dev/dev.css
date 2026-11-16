@@ -3,3 +3,5 @@
 #legacy-frame{display:block;width:100%;min-height:900px;border:1px solid #d9e4ed;border-radius:10px;margin-top:20px;background:white}
 
 .member-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #e6edf2}.member-row span{margin-right:auto}.member-row button{margin-top:0}.member-row select,.panel select{font:inherit;padding:8px;border:1px solid #becdd8;border-radius:7px}.danger{background:#b63333}
+
+.signup-names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:500px}.hint{color:#617b92;font-size:13px}@media(max-width:600px){.signup-names{grid-template-columns:1fr;gap:0}}
