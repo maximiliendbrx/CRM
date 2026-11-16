@@ -1,12 +1,11 @@
 // Préparation locale sans écriture réseau : aucune donnée n'est imprimée.
-import { randomUUID } from 'node:crypto';
-import { inspectBackup } from './verify-backup.mjs';
+import { inspectBackup } from './inspect-backup.mjs';
 
 const key = value => String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('fr');
 const clone = value => structuredClone(value);
 
 /** Construit les enregistrements à importer sans modifier ni l'archive ni une base. */
-export function buildImportPlan(backup, uuid = randomUUID) {
+export function buildImportPlan(backup, uuid = () => globalThis.crypto.randomUUID()) {
   const checked = inspectBackup(backup);
   if (checked.errors.length || checked.warnings.length) throw Error('Sauvegarde à corriger avant import : '+[...checked.errors,...checked.warnings].join(' '));
   const data = backup.data, companies = [], contacts = [], companyByName = new Map(), contactById = new Map();
