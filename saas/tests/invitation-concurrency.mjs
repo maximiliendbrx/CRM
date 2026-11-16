@@ -1,0 +1,21 @@
+// Test de concurrence sur le conteneur PostgreSQL jetable uniquement.
+import { execFile,execFileSync } from 'node:child_process';
+import { promisify } from 'node:util';
+import assert from 'node:assert/strict';
+const env={...process.env};for(const key of ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH'])delete env[key];
+const args=['--host=unix:///var/run/docker.sock','exec','crm-saas-invitation-test','psql','-qAt','-U','postgres','-v','ON_ERROR_STOP=1','-c'];
+const run=sql=>execFileSync('docker',[...args,sql],{encoding:'utf8',env}).trim().split('\n').at(-1);
+const runAsync=sql=>promisify(execFile)('docker',[...args,sql],{encoding:'utf8',env});
+const owner='50000000-0000-4000-8000-000000000005',recipient='60000000-0000-4000-8000-000000000006';
+run(`insert into auth.users(id,email,email_confirmed_at) values ('${owner}','race-owner@example.test',now()),('${recipient}','race-user@example.test',now())`);
+const workspace=run(`set role authenticated;select set_config('request.jwt.claim.sub','${owner}',false);select public.create_workspace('Test concurrence')`);
+assert.match(workspace,/^[a-f0-9-]{36}$/);
+const token=run(`set role authenticated;select set_config('request.jwt.claim.sub','${owner}',false);select invitation_token from public.create_workspace_invitation('${workspace}','race-user@example.test','member')`);
+assert.match(token,/^[a-f0-9]{64}$/);
+const sql=`set role authenticated;select set_config('request.jwt.claim.sub','${recipient}',false);select public.accept_workspace_invitation('${token}')`;
+const outcomes=await Promise.allSettled([runAsync(sql),runAsync(sql)]);
+assert.equal(outcomes.filter(x=>x.status==='fulfilled').length,1,'Une seule acceptation doit réussir');
+assert.match(outcomes.find(x=>x.status==='rejected').reason.stderr,/Invitation invalide ou inaccessible/);
+const count=run(`select count(*) from public.workspace_members where workspace_id='${workspace}' and user_id='${recipient}'`);
+assert.equal(count,'1');
+console.log('Acceptations concurrentes : un seul succès et un seul membre.');

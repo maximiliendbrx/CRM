@@ -57,6 +57,8 @@ begin
  if p_name is null or length(trim(p_name)) not between 1 and 120 then raise exception 'Nom invalide'; end if;
  insert into public.workspaces(name,owner_id) values(trim(p_name),v_user) returning id into v_workspace;
  insert into public.workspace_members(workspace_id,user_id,role) values(v_workspace,v_user,'owner');
+ insert into public.workspace_settings(workspace_id) values(v_workspace);
+ insert into public.billing_accounts(workspace_id) values(v_workspace);
  return v_workspace;
 end $$;
 revoke all on function public.create_workspace(text) from public,anon;

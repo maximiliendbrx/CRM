@@ -9,6 +9,7 @@ insert into public.companies(id,workspace_id,name) values ('aaaaaaaa-aaaa-4aaa-8
 insert into public.contacts(id,workspace_id,company_id,name) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',:'workspace_a','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','Contact A');
 select set_config('test.workspace_a',:'workspace_a',false),set_config('test.workspace_b',:'workspace_b',false);
 do $$ begin
+ if (select count(*) from public.billing_accounts)<>2 then raise exception 'ÉCHEC : facturation non initialisée'; end if;
  begin
   insert into public.contacts(workspace_id,company_id,name) values(current_setting('test.workspace_b')::uuid,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','Liaison interdite');
   raise exception 'ÉCHEC : relation inter-CRM acceptée';
@@ -25,6 +26,7 @@ select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222'
 do $$ begin
  if (select count(*) from public.workspaces)<>1 then raise exception 'ÉCHEC : espaces non isolés'; end if;
  if (select count(*) from public.contacts)<>1 then raise exception 'ÉCHEC : contact partagé inaccessible'; end if;
+ if (select count(*) from public.billing_accounts)<>0 then raise exception 'ÉCHEC : facturation visible par collaborateur'; end if;
  begin
   insert into public.companies(workspace_id,name) values(current_setting('test.workspace_b')::uuid,'Injection');
   raise exception 'ÉCHEC : écriture hors CRM autorisée';
