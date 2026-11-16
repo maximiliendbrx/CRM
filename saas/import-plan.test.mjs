@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {buildImportPlan} from './import-plan.mjs';
+const backup=()=>({version:1,data:{companies:[{id:'co',name:'Entreprise',sector:'Services'}],contacts:[{id:'c',name:'Contact',company:' entreprise '}],interactions:[{id:'i',contactId:'c',note:'historique'}],followups:[{id:'f',contactId:'c'}],coldCalls:[{id:'a',company:'Autre'}],projects:[{id:'p',contactId:'c',companyName:'Entreprise'}],catalogs:{roles:['Direction']},extra:'conservé'}});
+const ids=()=>{let i=0;return()=>`id-${++i}`};
+test('préserve données et liens tout en gardant les cold calls séparés',()=>{const source=backup(),plan=buildImportPlan(source,ids());assert.equal(plan.companies.length,1);assert.equal(plan.contacts[0].company_id,plan.companies[0].id);assert.equal(plan.projects[0].company_id,plan.companies[0].id);assert.equal(plan.projects[0].contact_id,plan.contacts[0].id);assert.deepEqual(plan.interactions[0].data,source.data.interactions[0]);assert.equal(plan.cold_calls[0].contact_id,null);assert.deepEqual(plan.settings.legacy_extra,{catalogs:source.data.catalogs,extra:'conservé'});assert.equal(source.data.contacts[0].company,' entreprise ')});
+test('crée une entreprise manquante à partir du contact',()=>{const b=backup();b.data.companies=[];const p=buildImportPlan(b,ids());assert.equal(p.companies.length,1);assert.equal(p.companies[0].derived,true)});
+test('refuse les ambiguïtés et les références absentes',()=>{const b=backup();b.data.companies.push({id:'co2',name:' ENTREPRISE '});assert.throws(()=>buildImportPlan(b,ids()),/rapprochement manuel/);const c=backup();c.data.followups[0].contactId='absent';assert.throws(()=>buildImportPlan(c,ids()),/référence|Référence/)});

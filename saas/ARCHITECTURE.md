@@ -73,3 +73,11 @@ En cas d'échec avant ouverture aux utilisateurs, garder `main` et l'ancienne ba
 ## Outil de précontrôle local
 
 `node saas/verify-backup.mjs CHEMIN` accepte un JSON de sauvegarde ou le ZIP actuel, calcule son SHA-256, vérifie la structure de base et signale les identifiants dupliqués et références orphelines, sans imprimer les données. Il ne modifie aucun fichier ni aucune base. Il ne vérifie ni les données Supabase non exportées, ni la restauration dans une base isolée : une répétition de restauration complète reste obligatoire.
+
+## Préparation de l'import de sauvegarde
+
+`import-plan.mjs` prépare localement les lignes sans effectuer de connexion ni modifier la sauvegarde. Il conserve les objets d'origine dans `data`, résout les entreprises par nom normalisé, garde les cold calls indépendants, et refuse les références absentes et les noms d'entreprise ambigus. Les éléments non reconnus, dont les catalogues, sont gardés dans `settings.legacy_extra`. Les objectifs et paramètres absents du ZIP ne peuvent pas être reconstitués.
+
+`003_workspace_import.sql` ajoute une fonction transactionnelle réservée au propriétaire d'un CRM vide : insertion des collections et des paramètres ou annulation intégrale en cas d'erreur, avec refus d'un second import. Ne pas l'exécuter en production avant intégration, audit et essais Supabase. Le plan n'est pas encore connecté à une interface d'import, et cette fonction ne résout pas la synchronisation collaborative des écrans existants.
+
+Le 16 novembre 2026, un essai isolé dans un conteneur PostgreSQL jetable a comparé les six collections et les catalogues de la sauvegarde fournie aux données importées. Le conteneur a ensuite été supprimé. Ceci ne prouve ni l'exhaustivité d'autres appareils ou du cloud, ni la compatibilité avec Supabase réel.
