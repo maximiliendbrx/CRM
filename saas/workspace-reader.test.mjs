@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {WorkspaceReader} from './workspace-reader.mjs';
+const A='10000000-0000-0000-0000-000000000001',B='10000000-0000-0000-0000-000000000002';
+const empty=()=>({companies:[],contacts:[],interactions:[],coldCalls:[],followups:[],projects:[]});
+const client=(rpc,user='user-a')=>({rpc,auth:{getUser:async()=>({data:{user:{id:user}},error:null})}});
+test('lit un espace avec une session vérifiée sans conserver de cache',async()=>{const data={...empty(),contacts:[{id:'one'}]};const r=new WorkspaceReader(client(async(name,args)=>{assert.equal(name,'get_workspace_snapshot');assert.equal(args.p_workspace,A);return {data,error:null}}));const result=await r.read(A);result.contacts[0].id='changed';assert.equal(data.contacts[0].id,'one')});
+test('annule une réponse tardive après changement d’espace',async()=>{let release;const r=new WorkspaceReader(client(async(_n,{p_workspace})=>p_workspace===A?new Promise(resolve=>{release=resolve}):{data:empty(),error:null}));const first=r.read(A);await new Promise(resolve=>setImmediate(resolve));await r.read(B);release({data:empty(),error:null});await assert.rejects(first,/contexte modifié/)});
+test('refuse les lectures tardives après fermeture',async()=>{let release;const r=new WorkspaceReader(client(async()=>new Promise(resolve=>{release=resolve})));const request=r.read(A);await new Promise(resolve=>setImmediate(resolve));r.close();release({data:empty(),error:null});await assert.rejects(request,/contexte modifié/)});
+test('refuse une réponse incomplète et un accès rejeté',async()=>{await assert.rejects(new WorkspaceReader(client(async()=>({data:{contacts:[]}}))).read(A),/invalides/);await assert.rejects(new WorkspaceReader(client(async()=>({error:{message:'Accès refusé'}}))).read(A),/Accès refusé/)});
+test('refuse la réponse si le compte a changé pendant la lecture',async()=>{let calls=0;const c=client(async()=>({data:empty()}));c.auth.getUser=async()=>({data:{user:{id:++calls===1?'a':'b'}}});await assert.rejects(new WorkspaceReader(c).read(A),/Session modifiée/)});
