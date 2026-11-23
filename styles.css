@@ -98,3 +98,7 @@ main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;paddin
 @media(max-width:760px){.report-test .rt-grid,.rt-filters,.rt-columns{grid-template-columns:1fr}.report-test button[type=submit]{width:100%;min-height:48px;font-size:16px}}
 
 .cold-edit-recall{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}#cold-interest-fields{margin-top:14px}#cold-interest-fields h4{margin:0}@media(max-width:760px){.cold-edit-recall{grid-template-columns:1fr}}
+
+/* Interactions : boutons Modifier / Supprimer, et fiches empilées sur mobile */
+.interaction-actions{display:flex;gap:8px;flex-wrap:wrap}.interaction-edit{margin:0;font-size:12px;padding:6px 9px}
+@media(max-width:760px){#interactions-view table{min-width:0}#interactions-view thead{display:none}#interactions-view tr,#interactions-view td{display:block}#interactions-view tr{padding:12px 14px;border-bottom:1px solid var(--line)}#interactions-view td{border:0;padding:4px 0}#interactions-view td::before{content:attr(data-label);display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)}#interactions-view td:last-child{padding-top:10px}#interactions-view td:last-child::before{display:none}.interaction-actions button{flex:1;min-height:42px}}
