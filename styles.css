@@ -87,3 +87,6 @@ main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;paddin
 @media(max-width:760px){.contact-fields{gap:14px}.profile{padding:16px}.profile form.read-mode .contact-fields label{padding-bottom:12px;border-bottom:1px solid #e3ebf5;font-size:12px;text-transform:uppercase;letter-spacing:.4px}.profile form.read-mode .contact-fields .read-value{text-transform:none;letter-spacing:0}.profile .profile-edit-button,.profile form button[type=submit]{width:100%;min-height:48px;font-size:16px}.profile form .close,.profile form button+button{width:100%;min-height:44px;margin:10px 0 0}.profile-actions button{flex:1;min-height:44px}}
 
 #contact-form .close{margin-left:10px}#contacts-view>#new-contact-toggle{margin:0 0 18px}@media(max-width:760px){#contacts-view>#new-contact-toggle{width:100%;min-height:48px;font-size:16px}#contact-form .close{margin:10px 0 0;width:100%}}
+
+/* Accueil : chaque bouton d'action a sa statistique juste en dessous */
+#home-view .home-action{display:flex;flex-direction:column;gap:12px;min-width:0}#home-view .home-action .stats{grid-template-columns:1fr;margin:0;flex:1}#home-view .home-action .stats article{height:100%}
