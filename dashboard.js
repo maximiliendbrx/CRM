@@ -5,8 +5,12 @@ function drawDashboard(){
   const now=new Date(),days=Array.from({length:7},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-6+i);return {day:d,key:chartDate(d),count:0}});
   const monthStart=new Date(now.getFullYear(),now.getMonth(),1),monthEnd=new Date(now.getFullYear(),now.getMonth()+1,1);
   const inMonth=value=>{const d=new Date(value);return Number.isFinite(d.getTime())&&d>=monthStart&&d<monthEnd};
-  const recentStart=days[0].day;
-  $('new-contact-count').textContent=db.contacts.filter(c=>c.createdAt&&new Date(c.createdAt)>=recentStart&&new Date(c.createdAt)<=now).length;
+  // Semaine en cours : du lundi au dimanche.
+  const weekStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-((now.getDay()+6)%7)),weekEnd=new Date(weekStart.getFullYear(),weekStart.getMonth(),weekStart.getDate()+7),weekEndKey=chartDate(new Date(weekEnd.getFullYear(),weekEnd.getMonth(),weekEnd.getDate()-1)),todayKey=chartDate(now);
+  const pending=db.followups.filter(f=>!f.done&&f.date&&f.date<=weekEndKey),overdue=pending.filter(f=>f.date<todayKey).length;
+  $('week-followup-count').textContent=pending.length;$('week-followup-note').textContent=overdue?`dont ${overdue} en retard`:'';
+  const weekCalls=(Array.isArray(db.coldCalls)?db.coldCalls:[]).filter(call=>{const d=new Date(call.date);return Number.isFinite(d.getTime())&&d>=weekStart&&d<weekEnd}).length,fmtDay=d=>new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short'}).format(d);
+  $('week-call-count').textContent=weekCalls;$('week-call-note').textContent=`Du ${fmtDay(weekStart)} au ${fmtDay(new Date(weekEnd.getFullYear(),weekEnd.getMonth(),weekEnd.getDate()-1))}`;
   const coldCalls=Array.isArray(db.coldCalls)?db.coldCalls:[],coldIds=new Set(coldCalls.map(call=>call.id));
   const calls=[...coldCalls,...db.interactions.filter(i=>i.type==='Appel'&&!coldIds.has(i.coldCallId))];
   calls.forEach(i=>{const d=new Date(i.date);if(!Number.isFinite(d.getTime())||d>now)return;const day=days.find(x=>x.key===chartDate(d));if(day)day.count++});
