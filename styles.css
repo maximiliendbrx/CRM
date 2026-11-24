@@ -123,3 +123,7 @@ html:not([data-role="admin"]) .admin-only{display:none!important}
 /* Mot de passe : bouton œil, lien « mot de passe oublié » */
 .password-field{position:relative;display:block;margin-top:5px}.password-field input{margin-top:0!important;padding-right:48px}.password-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);margin:0;padding:8px 10px;background:transparent;color:var(--muted);line-height:0}.password-toggle:hover{color:var(--ink);background:#eef3f9}
 .link-button{display:block;margin:12px auto 0;padding:6px 8px;background:transparent;color:var(--blue);font-weight:650}.link-button:hover{text-decoration:underline}
+
+/* Fiche entreprise : ajout d'un collaborateur ou d'un projet */
+.company-add-button{margin:12px 10px 0 0}.company-inline-form{margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:#fff}.company-inline-form h4{margin:0 0 4px}.company-inline-form[hidden]{display:none}.company-inline-form>button{margin-right:10px}.project-assignees{margin-top:14px}
+@media(max-width:760px){.company-add-button,.company-inline-form>button{width:100%;min-height:46px;margin-right:0}.company-inline-form>.close{margin-top:10px}}

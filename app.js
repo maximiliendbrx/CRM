@@ -26,16 +26,16 @@ function involves(interaction,contactId){return interaction.contactId===contactI
 function interactionsFor(contactId){return db.interactions.filter(i=>involves(i,contactId))}
 function participantNames(interaction){return participantsOf(interaction).map(id=>by(id)?.name).filter(Boolean)}
 function otherParticipantNames(interaction,exceptId){return [interaction.contactId,...participantsOf(interaction)].filter(id=>id!==exceptId).map(id=>by(id)?.name).filter(Boolean).join(', ')}
-function createParticipantPicker(){
+function createParticipantPicker(legendText='Autres participants (même entreprise)',helpText='Cochez les autres personnes présentes à cet échange.'){
  const box=document.createElement('fieldset'),legend=document.createElement('legend'),list=document.createElement('div'),hint=document.createElement('p');
- box.className='participant-picker';legend.textContent='Autres participants (même entreprise)';list.className='participant-list';hint.className='hint';box.append(legend,list,hint);
+ box.className='participant-picker';legend.textContent=legendText;list.className='participant-list';hint.className='hint';box.append(legend,list,hint);
  let checked=new Set();
  function refresh(mainId,preselected){
   if(Array.isArray(preselected))checked=new Set(preselected);
   const main=by(mainId),others=main?db.contacts.filter(c=>c.id!==main.id&&sameCompanyName(c.company,main.company)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'fr')):[];
   checked=new Set([...checked].filter(id=>others.some(c=>c.id===id)));list.replaceChildren();
   for(const c of others){const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');label.className='check-label';input.type='checkbox';input.dataset.participant=c.id;input.checked=checked.has(c.id);input.onchange=()=>{input.checked?checked.add(c.id):checked.delete(c.id)};text.textContent=c.name+(c.role?' — '+c.role:'');label.append(input,text);list.append(label)}
-  hint.textContent=!main?'':others.length?'Cochez les autres personnes présentes à cet échange.':'Aucun autre contact dans cette entreprise : créez-le d’abord dans Contacts.';
+  hint.textContent=!main?'':others.length?helpText:'Aucun autre contact dans cette entreprise : créez-le d’abord dans Contacts.';
  }
  return {el:box,refresh,selected:()=>[...checked],reset:()=>{checked=new Set()}};
 }
