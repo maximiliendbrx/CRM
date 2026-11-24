@@ -19,14 +19,14 @@
  const contactCtx=(L,contact,company,date)=>({sector:L.sectorOf(company||contact?.company),company:clean(company||contact?.company),status:contact?(contact.status||'À qualifier'):'',role:clean(contact?.role),date:date||''});
  const DATASETS={
   contacts:{label:'Contacts et leurs échanges',sort:'company',applies:['sector','company','status','role','period'],
-   columns:[['name','Nom et prénom'],['company','Entreprise'],['sector','Secteur'],['role','Fonction'],['phone','Téléphone'],['email','E-mail'],['status','Statut commercial'],['date','Date de prise de contact'],['type','Type'],['note','Compte rendu'],['nextDate','Date de la prochaine relance'],['nextTitle','Objet de la prochaine relance'],['tracking','Suivi des relances']],
+   columns:[['name','Nom et prénom'],['company','Entreprise'],['sector','Secteur'],['role','Fonction'],['phone','Téléphone'],['email','E-mail'],['status','Statut commercial'],['date','Date de prise de contact'],['type','Type'],['participants','Autres participants'],['note','Compte rendu'],['nextDate','Date de la prochaine relance'],['nextTitle','Objet de la prochaine relance'],['tracking','Suivi des relances']],
    rows(L,o){const out=[],today=localDay(new Date());
     for(const c of db.contacts){
-     const exchanges=db.interactions.filter(i=>i.contactId===c.id&&(o.notes||String(i.type||'').trim().toLocaleLowerCase('fr')!=='note')).sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0));
+     const exchanges=db.interactions.filter(i=>involves(i,c.id)&&(o.notes||String(i.type||'').trim().toLocaleLowerCase('fr')!=='note')).sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0));
      const followups=db.followups.filter(f=>f.contactId===c.id),next=followups.filter(f=>!f.done).sort((a,b)=>String(a.date).localeCompare(String(b.date)))[0],done=followups.filter(f=>f.done).length;
      const tracking=followups.length?`${done} faite(s) sur ${followups.length}${next?(reportDay(next.date)<today?' · prochaine EN RETARD':' · prochaine à faire'):' · à jour'}`:'Aucune relance';
      const sector=L.sectorOf(c.company),base={name:c.name||'',company:c.company||'',sector,role:c.role||'',phone:c.phone||'',email:c.email||'',status:c.status||'À qualifier',nextDate:next?excel(next.date):'',nextTitle:next?.title||'',tracking};
-     for(const x of exchanges.length?exchanges:[null])out.push({ctx:contactCtx(L,c,null,x?.date),cells:{...base,date:x?excel(x.date):'',type:x?.type||'',note:x?interactionNoteText(x):''}});
+     for(const x of exchanges.length?exchanges:[null])out.push({ctx:contactCtx(L,c,null,x?.date),cells:{...base,date:x?excel(x.date):'',type:x?.type||'',participants:x?otherParticipantNames(x,c.id):'',note:x?interactionNoteText(x):''}});
     }return out}},
   coldcalls:{label:'Cold calls',sort:'date-desc',applies:['sector','company','status','role','period'],
    columns:[['date','Date'],['company','Entreprise'],['sector','Secteur'],['phone','Téléphone appelé'],['email','E-mail de prospection'],['outcome','Résultat de l’appel'],['recallDate','Date de rappel'],['recallTitle','Objet du rappel'],['note','Commentaire'],['sent','Plaquette envoyée'],['contact','Contact créé']],

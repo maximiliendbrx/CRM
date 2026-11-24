@@ -102,3 +102,6 @@ main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;paddin
 /* Interactions : boutons Modifier / Supprimer, et fiches empilées sur mobile */
 .interaction-actions{display:flex;gap:8px;flex-wrap:wrap}.interaction-edit{margin:0;font-size:12px;padding:6px 9px}
 @media(max-width:760px){#interactions-view table{min-width:0}#interactions-view thead{display:none}#interactions-view tr,#interactions-view td{display:block}#interactions-view tr{padding:12px 14px;border-bottom:1px solid var(--line)}#interactions-view td{border:0;padding:4px 0}#interactions-view td::before{content:attr(data-label);display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)}#interactions-view td:last-child{padding-top:10px}#interactions-view td:last-child::before{display:none}.interaction-actions button{flex:1;min-height:42px}}
+
+/* Participants supplémentaires d'une interaction */
+.participant-picker{margin:13px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:0}.participant-picker legend{padding:0 6px;font-size:13px;font-weight:650;color:var(--muted)}.participant-list .check-label{margin-top:8px;font-weight:500;color:var(--ink)}.participant-picker .hint{margin-top:6px}.participants-line{display:block;margin-top:3px}
