@@ -23,20 +23,28 @@ Les données sont stockées uniquement dans le `localStorage` du navigateur, sou
 
 Dans Paramètres, le téléchargement d'une sauvegarde produit un ZIP contenant le code actuel dans `site/`, les données de la sauvegarde dans `donnees-privees/` et un guide de réinstallation. Publiez uniquement `site/` : ne publiez jamais le dossier de données privées. Après publication, importez le fichier JSON privé dans Paramètres > Sauvegardes. Le ZIP n'inclut ni identifiants Supabase, ni sauvegarde du projet Supabase lui-même. La liste `SITE_FILES` dans `backup-bundle.js` doit être mise à jour lorsqu'un fichier nécessaire au site est ajouté.
 
-Ce choix convient à un prototype mono-utilisateur. Pour un usage partagé ou de production, remplacer ce stockage par une API authentifiée, une base de données avec contrôle d'accès et une politique de rétention.
+Avec la connexion Supabase, la copie locale n'est qu'un cache de travail : la source de vérité est la base partagée.
 
 ## Publication GitHub
 
 Le dossier est prêt à être initialisé et poussé dans un dépôt GitHub. Aucune clé, jeton, fichier `.env` ou donnée réelle ne doit être ajouté au dépôt.
 
-## Synchronisation Supabase (optionnelle)
+## Connexion et synchronisation (Supabase)
 
-Le CRM fonctionne toujours en local sans Supabase. Pour activer la synchronisation après validation de l'employeur :
+L'accès au CRM exige une connexion : aucune donnée n'est chargée avant l'authentification et le site ne propose **aucune inscription**. La protection réelle des données repose sur la base : les règles Row Level Security (RLS) de `supabase-schema.sql` limitent le CRM aux membres autorisés (table `crm_members`). Le code du site, lui, reste public (GitHub Pages) : n'y mettez jamais de secret.
 
-1. Créer un projet Supabase dont l'organisation maîtrise les accès et l'hébergement, puis exécuter `supabase-schema.sql` dans SQL Editor.
-2. Dans Supabase Authentication > Users, créer un utilisateur autorisé (ou configurer une invitation sécurisée). Ne pas mettre le mot de passe dans GitHub.
-3. Ouvrir le CRM > Paramètres > Synchronisation et renseigner **Project URL** et **publishable key** (ou `anon` key). La clé `service_role` et les autres clés secrètes ne doivent **jamais** être placées dans un navigateur.
-4. Se connecter avec le compte créé. **Depuis l'ordinateur qui contient les contacts**, cliquer sur « Importer les contacts locaux » avant de commencer à travailler sur un second appareil.
-5. Sur l'autre appareil, configurer le même projet et se connecter avec le même compte pour récupérer les données.
+Mise en place :
 
-Les règles Row Level Security limitent chaque enregistrement à son propriétaire `owner_id`. Ce prototype n'offre pas encore de gestion multi-utilisateurs distincts, de journal d'audit ou de résolution de conflits d'édition simultanée. Ne pas partager un compte/mot de passe pour donner accès à l'employeur. Les sauvegardes locales restent indispensables et les modifications concurrentes peuvent se remplacer. N'utiliser avec de vraies données professionnelles qu'après validation juridique, sécurité et RGPD.
+1. Exécuter `supabase-schema.sql` dans Supabase > SQL Editor, puis créer le compte administrateur dans Authentication > Users et l'enregistrer comme administrateur (étape 3 du script).
+2. Dans Authentication > Sign In / Providers, **désactiver « Allow new users to sign up »** : seules les invitations de l'administrateur créent des comptes.
+3. Déployer la fonction `supabase/functions/manage-members` (Edge Function). Elle utilise la clé secrète côté serveur uniquement ; l'administrateur crée ainsi des accès depuis Paramètres > Utilisateurs.
+4. `supabase-config.js` contient l'URL du projet et la clé **publishable** (publique par conception). Ne jamais y placer la clé secrète ou `service_role`.
+
+Fonctionnement :
+
+- Tous les comptes partagent le même CRM. Chaque enregistrement est envoyé à Supabase ; si deux personnes modifient en même temps, les changements sont fusionnés fiche par fiche (en cas de modification de la même fiche, la version de la personne qui enregistre l'emporte).
+- Invitation : Paramètres > Utilisateurs > e-mail de la personne. Un mot de passe temporaire est affiché une seule fois et doit être transmis par l'administrateur ; la personne le change à sa première connexion. L'administrateur peut aussi générer un nouveau mot de passe temporaire ou supprimer un accès.
+- Chacun peut changer son mot de passe dans Paramètres > Mon compte. La réinitialisation et l'import de sauvegarde sont réservés à l'administrateur.
+- À la déconnexion, les copies locales (données et sauvegardes automatiques) de l'appareil sont effacées.
+
+Limites : pas de journal d'audit, pas de droits fins par fiche, pas de « mot de passe oublié » en libre-service (l'administrateur génère un nouveau mot de passe temporaire ; pour le compte administrateur, utiliser le tableau de bord Supabase). La bibliothèque Supabase est chargée depuis un CDN public : l'héberger dans `vendor/` réduirait cette dépendance. N'utiliser avec de vraies données professionnelles qu'après validation juridique, sécurité et RGPD.

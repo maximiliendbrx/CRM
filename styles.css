@@ -108,3 +108,14 @@ main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;paddin
 
 /* Échange de découverte : un bloc par question, questions en gras */
 .discovery-edit label{margin-top:14px;color:var(--ink)}.discovery-edit label strong{display:block;font-weight:800;margin-bottom:5px}.discovery-edit textarea{min-height:70px}.discovery-line{white-space:pre-line;overflow-wrap:anywhere}.discovery-line+.discovery-line{margin-top:8px}.discovery-line strong{font-weight:800}
+
+/* Connexion obligatoire */
+html.locked .topbar,html.locked main{display:none!important}
+html:not(.locked) #auth-gate{display:none}
+#auth-gate{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:#f6f8fb;overflow:auto}
+.auth-card{width:min(420px,100%);padding:28px 26px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 40px #1c365214}
+.auth-card h1{margin:0 0 6px;font-size:26px}.auth-card h2{font-size:18px;margin:0 0 10px;color:var(--muted);font-weight:650}.auth-card form[hidden]{display:none}.auth-card button[type=submit]{width:100%;min-height:46px;font-size:16px}
+.auth-error{color:var(--danger)!important;font-weight:650}
+html:not([data-role="admin"]) .admin-only{display:none!important}
+.account-actions{display:flex;gap:10px;flex-wrap:wrap}.account-actions button{margin-top:6px}#account-password-form{margin-top:22px;padding-top:6px;border-top:1px solid var(--line)}#account-password-form h4{margin-top:14px}
+.credentials{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0 0;padding:12px;border:1px solid var(--line);border-radius:8px;background:#f6f9fc;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;user-select:all}
