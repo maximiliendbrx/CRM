@@ -5,7 +5,8 @@
  const DIRTY='bb-crm-cloud-pending-v1',IMPORT='bb-crm-precloud-data-v1',BACKUPS='bb-crm-backups-v1',OLD_CONFIG='bb-crm-cloud-config-v1';
  const COLLECTIONS=['contacts','interactions','followups','companies','coldCalls','projects'];
  const root=document.documentElement,el=id=>document.getElementById(id);
- let client=null,user=null,role=null,owner=null,remoteVersion=null,base=null,ready=false,busy=false,changed=false;
+ const recoveryLink=/[#&?]type=recovery\b/.test(location.hash+location.search),linkError=/error_code=|error=access_denied/.test(location.hash+location.search);
+ let recovery=recoveryLink,client=null,user=null,role=null,owner=null,remoteVersion=null,base=null,ready=false,busy=false,changed=false;
  const safe=fn=>{try{return fn()}catch{return undefined}};
  const notice=text=>{el('cloud-status').textContent=text};
  const valid=data=>data&&['contacts','interactions','followups'].every(k=>Array.isArray(data[k]));
@@ -16,7 +17,7 @@
 
  // ---------- Écran de connexion ----------
  function showGate(which,message,isError){
-  root.classList.add('locked');el('auth-login-form').hidden=which!=='login';el('auth-newpass-form').hidden=which!=='newpass';
+  root.classList.add('locked');el('auth-login-form').hidden=which!=='login';el('auth-newpass-form').hidden=which!=='newpass';el('auth-reset-form').hidden=which!=='reset';
   const text=el('auth-message');text.textContent=message||'';text.classList.toggle('auth-error',!!isError);text.hidden=!message;
  }
  function unlock(){root.classList.remove('locked');root.dataset.role=role||'';safe(()=>checkAutomaticBackup())}
@@ -117,9 +118,13 @@
   const config=window.CRM_SUPABASE;
   if(!config?.url||!config?.key){showGate('none','Configuration de la connexion manquante.',true);return}
   if(!window.supabase?.createClient){showGate('none','Service de connexion indisponible. Vérifiez votre connexion Internet puis rechargez la page.',true);return}
-  client=window.supabase.createClient(config.url,config.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  client=window.supabase.createClient(config.url,config.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  client.auth.onAuthStateChange(event=>{if(event==='PASSWORD_RECOVERY')recovery=true});
   try{
    const {data,error}=await client.auth.getUser();
+   if(recoveryLink||linkError)safe(()=>history.replaceState(null,'',location.pathname));
+   if(linkError&&!data?.user){showGate('login','Ce lien est invalide ou a expiré. Demandez un nouveau lien avec « Mot de passe oublié ? ».',true);return}
+   if(recovery&&data?.user){user=data.user;showGate('newpass','Choisissez un nouveau mot de passe pour votre compte.');return}
    if(data?.user)await afterLogin(data.user);
    else showGate('login',error&&error.name==='AuthRetryableFetchError'?'Connexion au service impossible. Vérifiez votre connexion.':'',!!error&&error.name==='AuthRetryableFetchError');
   }catch(error){showGate('login','Connexion au service impossible : '+error.message,true)}
@@ -141,7 +146,20 @@
   const {data,error}=await client.auth.updateUser({password:first,data:{must_change_password:false}});
   el('auth-new').value='';el('auth-new2').value='';
   if(error){showGate('newpass','Changement impossible : '+error.message,true);return}
-  user=data.user;await startSession();
+  recovery=false;await afterLogin(data.user);
+ };
+
+ el('auth-forgot').onclick=()=>{el('auth-reset-email').value=el('auth-email').value;showGate('reset','')};
+ el('auth-reset-back').onclick=()=>showGate('login','');
+ el('auth-reset-form').onsubmit=async e=>{
+  e.preventDefault();if(!client)return;const button=e.target.querySelector('button[type=submit]'),email=el('auth-reset-email').value.trim();
+  button.disabled=true;
+  try{
+   const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname.replace(/index\.html$/,'')});
+   if(error&&(error.status===429||/rate|seconds|too many/i.test(error.message))){showGate('reset','Trop de demandes : réessayez dans quelques minutes.',true);return}
+   if(error){showGate('reset','Envoi impossible : '+error.message,true);return}
+   showGate('reset','Si un compte existe pour cette adresse, un e-mail contenant un lien de réinitialisation vient d’être envoyé. Pensez à vérifier les courriers indésirables.');
+  }catch(error){showGate('reset','Envoi impossible : '+error.message,true)}finally{button.disabled=false}
  };
 
  // ---------- Compte (Paramètres) ----------
@@ -205,6 +223,14 @@
   catch(error){message.textContent=error.message}
  };
 
+ // Bouton œil : affiche ou masque le mot de passe saisi.
+ const EYE='<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',EYE_OFF='<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10.5 10.5 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 4.4-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+ function addPasswordToggle(input){
+  const wrap=document.createElement('span'),button=document.createElement('button');wrap.className='password-field';input.before(wrap);wrap.append(input,button);
+  button.type='button';button.className='password-toggle';button.innerHTML=EYE;button.title='Afficher le mot de passe';button.setAttribute('aria-label','Afficher le mot de passe');button.setAttribute('aria-pressed','false');
+  button.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';button.innerHTML=show?EYE_OFF:EYE;const label=show?'Masquer le mot de passe':'Afficher le mot de passe';button.title=label;button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(show))};
+ }
+ document.querySelectorAll('input[type=password]').forEach(addPasswordToggle);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(false)});
  setInterval(()=>{if(!document.hidden)refresh(false)},120000);
  init();

@@ -38,13 +38,15 @@ Mise en place :
 1. Exécuter `supabase-schema.sql` dans Supabase > SQL Editor, puis créer le compte administrateur dans Authentication > Users et l'enregistrer comme administrateur (étape 3 du script).
 2. Dans Authentication > Sign In / Providers, **désactiver « Allow new users to sign up »** : seules les invitations de l'administrateur créent des comptes.
 3. Déployer la fonction `supabase/functions/manage-members` (Edge Function). Elle utilise la clé secrète côté serveur uniquement ; l'administrateur crée ainsi des accès depuis Paramètres > Utilisateurs.
-4. `supabase-config.js` contient l'URL du projet et la clé **publishable** (publique par conception). Ne jamais y placer la clé secrète ou `service_role`.
+4. Pour « Mot de passe oublié ? » : dans Authentication > URL Configuration, mettre l'adresse du site (par exemple `https://<compte>.github.io/CRM/`) dans **Site URL** et dans **Redirect URLs**. Sans cela, le lien reçu par e-mail ne revient pas sur le site. Le service d'e-mail par défaut de Supabase est limité (quelques e-mails par heure, destinataires réservés aux membres de l'organisation) : configurer un SMTP personnalisé (Authentication > Emails) pour un usage régulier.
+5. `supabase-config.js` contient l'URL du projet et la clé **publishable** (publique par conception). Ne jamais y placer la clé secrète ou `service_role`.
 
 Fonctionnement :
 
 - Tous les comptes partagent le même CRM. Chaque enregistrement est envoyé à Supabase ; si deux personnes modifient en même temps, les changements sont fusionnés fiche par fiche (en cas de modification de la même fiche, la version de la personne qui enregistre l'emporte).
 - Invitation : Paramètres > Utilisateurs > e-mail de la personne. Un mot de passe temporaire est affiché une seule fois et doit être transmis par l'administrateur ; la personne le change à sa première connexion. L'administrateur peut aussi générer un nouveau mot de passe temporaire ou supprimer un accès.
+- Mot de passe oublié : le lien « Mot de passe oublié ? » de l'écran de connexion envoie un e-mail avec un lien pour choisir un nouveau mot de passe (le message ne révèle pas si l'adresse existe). Un bouton « œil » permet d'afficher le mot de passe saisi.
 - Chacun peut changer son mot de passe dans Paramètres > Mon compte. La réinitialisation et l'import de sauvegarde sont réservés à l'administrateur.
 - À la déconnexion, les copies locales (données et sauvegardes automatiques) de l'appareil sont effacées.
 
-Limites : pas de journal d'audit, pas de droits fins par fiche, pas de « mot de passe oublié » en libre-service (l'administrateur génère un nouveau mot de passe temporaire ; pour le compte administrateur, utiliser le tableau de bord Supabase). La bibliothèque Supabase est chargée depuis un CDN public : l'héberger dans `vendor/` réduirait cette dépendance. N'utiliser avec de vraies données professionnelles qu'après validation juridique, sécurité et RGPD.
+Limites : pas de journal d'audit, pas de droits fins par fiche, la réinitialisation par e-mail dépend du service d'e-mail Supabase (voir ci-dessus) ; à défaut, l'administrateur génère un nouveau mot de passe temporaire. La bibliothèque Supabase est chargée depuis un CDN public : l'héberger dans `vendor/` réduirait cette dépendance. N'utiliser avec de vraies données professionnelles qu'après validation juridique, sécurité et RGPD.

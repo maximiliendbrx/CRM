@@ -119,3 +119,7 @@ html:not(.locked) #auth-gate{display:none}
 html:not([data-role="admin"]) .admin-only{display:none!important}
 .account-actions{display:flex;gap:10px;flex-wrap:wrap}.account-actions button{margin-top:6px}#account-password-form{margin-top:22px;padding-top:6px;border-top:1px solid var(--line)}#account-password-form h4{margin-top:14px}
 .credentials{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0 0;padding:12px;border:1px solid var(--line);border-radius:8px;background:#f6f9fc;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;user-select:all}
+
+/* Mot de passe : bouton œil, lien « mot de passe oublié » */
+.password-field{position:relative;display:block;margin-top:5px}.password-field input{margin-top:0!important;padding-right:48px}.password-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);margin:0;padding:8px 10px;background:transparent;color:var(--muted);line-height:0}.password-toggle:hover{color:var(--ink);background:#eef3f9}
+.link-button{display:block;margin:12px auto 0;padding:6px 8px;background:transparent;color:var(--blue);font-weight:650}.link-button:hover{text-decoration:underline}
