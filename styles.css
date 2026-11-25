@@ -91,11 +91,6 @@ main{max-width:none;width:calc(100% - 205px);min-width:0;min-height:100vh;paddin
 /* Accueil : chaque bouton d'action a sa statistique juste en dessous */
 #home-view .home-action{display:flex;flex-direction:column;gap:12px;min-width:0}#home-view .home-action .stats{grid-template-columns:1fr;margin:0;flex:1}#home-view .home-action .stats article{height:100%}
 
-/* Rapport test */
-.report-test{border-color:#cfe0fa;background:#f8fbff}.report-test .rt-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 14px}.report-test .rt-fieldset{margin:18px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:10px;min-width:0}.report-test legend{padding:0 6px;font-weight:750;color:var(--ink)}
-.rt-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;align-items:start}.rt-multi{border:1px solid #cbd5e1;border-radius:8px;background:#fff;min-width:0}.rt-multi[hidden]{display:none}.rt-multi summary{cursor:pointer;padding:10px 12px;font-weight:650;color:var(--ink)}.rt-multi-body{padding:0 12px 12px}.rt-multi-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.rt-multi-tools input{flex:1 1 100%;width:auto;margin:0}.rt-multi-tools button{margin:0;padding:8px 10px;font-size:12px}.rt-multi-list{max-height:200px;overflow:auto;margin-top:8px}.rt-multi-list .check-label{margin-top:6px;font-weight:500;color:var(--ink)}.rt-multi-list .check-label[hidden]{display:none}
-.rt-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 14px}.rt-columns .check-label{font-weight:500;color:var(--ink)}.rt-col-actions{display:flex;gap:8px;flex-wrap:wrap}.rt-col-actions button{margin-top:12px;padding:8px 10px;font-size:12px}
-@media(max-width:760px){.report-test .rt-grid,.rt-filters,.rt-columns{grid-template-columns:1fr}.report-test button[type=submit]{width:100%;min-height:48px;font-size:16px}}
 
 .cold-edit-recall{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}#cold-interest-fields{margin-top:14px}#cold-interest-fields h4{margin:0}@media(max-width:760px){.cold-edit-recall{grid-template-columns:1fr}}
 
