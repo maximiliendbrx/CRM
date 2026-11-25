@@ -6,11 +6,11 @@ function findSameContact(name,company){const n=plainText(name),c=plainText(compa
 function isRecallOutcome(outcome){return outcome==='À rappeler'||outcome==='À rappeler plus tard'}
 // « Pas de réponse » propose aussi un rappel, mais facultatif ; « À rappeler plus tard » l'exige.
 function canRecall(outcome){return isRecallOutcome(outcome)||outcome==='Pas de réponse'}
-function coldCallRecall(call){const linked=db.followups.find(f=>f.coldCallId===call.id&&f.origin==='recall');if(linked)return {date:linked.date,title:linked.title,done:!!linked.done};return call.recallDate?{date:call.recallDate,title:call.recallTitle||'Rappeler',done:false}:null}
+function coldCallRecall(call){const linked=db.followups.find(f=>f.coldCallId===call.id&&f.origin==='recall');if(linked)return {date:linked.date,title:linked.title,done:!!linked.done};return call.recallDate?{date:call.recallDate,title:call.recallTitle||'Rappeler',done:!!call.recallDoneAt}:null}
 function applyColdCallRecall(call,recall){
- if(!recall||!canRecall(call.outcome)){delete call.recallDate;delete call.recallTitle;return}
+ if(!recall||!canRecall(call.outcome)){delete call.recallDate;delete call.recallTitle;delete call.recallDoneAt;return}
  const contact=call.contactId&&by(call.contactId);
- if(!contact){call.recallDate=recall.date;call.recallTitle=recall.title;return}
+ if(!contact){if(call.recallDate!==recall.date||call.recallTitle!==recall.title)delete call.recallDoneAt;call.recallDate=recall.date;call.recallTitle=recall.title;return}
  const linked=db.followups.find(f=>f.coldCallId===call.id&&f.origin==='recall');
  if(linked){const changed=linked.date!==recall.date||linked.title!==recall.title;Object.assign(linked,{contactId:contact.id,date:recall.date,title:recall.title});if(changed&&linked.done){linked.done=false;delete linked.completedAt}}
  else db.followups.push({id:crypto.randomUUID(),contactId:contact.id,date:recall.date,title:recall.title,done:false,coldCallId:call.id,origin:'recall'});
@@ -41,4 +41,43 @@ coldForm.onsubmit=e=>{e.preventDefault();const data=Object.fromEntries(new FormD
  let contact=null,linkedExisting=false;if(coldCreate.checked){const same=findSameContact(data.contactName,company);if(same){contact=same;linkedExisting=true}else{contact={id:crypto.randomUUID(),createdAt,name:data.contactName.trim(),company:ensureCompany(company),phone:data.contactPhone.trim(),email:data.contactEmail.trim(),role:data.contactRole.trim(),status:'À qualifier'};db.contacts.push(contact)}call.contactId=contact.id;if(coldFirst.checked){const detail=value=>value.trim()||'Non renseigné',notes=[call.note,data.additionalNotes.trim()].filter(Boolean).join('\n');const note=`Échange de découverte\nFonctionnement actuel : ${detail(data.competition)}\nNombre de formations : ${detail(data.trainingVolume)}\nBudget : ${detail(data.budget)}${notes?`\nNotes supplémentaires : ${notes}`:''}`;db.interactions.push({id:crypto.randomUUID(),contactId:contact.id,type:'Appel',kind:'Échange de découverte',coldCallId:call.id,note,date:callDate})}}
  const createdContact=coldCreate.checked;if(createdContact&&call.sector){if(!Array.isArray(db.companies))db.companies=[];const existing=db.companies.find(c=>companyKey(c.name)===companyKey(company));if(existing){if(!existing.sector)existing.sector=call.sector}else db.companies.push({id:crypto.randomUUID(),name:company,sector:call.sector})}if(!Array.isArray(db.coldCalls))db.coldCalls=[];applyColdCallRecall(call,followups.recall);if(contact)addInterestFollowup(call,contact,followups.interest);db.coldCalls.push(call);save();coldForm.reset();coldDefaultDate=localDay(new Date());coldForm.elements.date.value=coldDefaultDate;updateColdFields();render();$('coldcall-message').textContent=linkedExisting?'Cold call enregistré. Contact déjà existant, lié à cet appel.':createdContact?'Cold call et contact enregistrés.':'Cold call enregistré.';
 };
-const renderBeforeColdCalls=render;render=function(){renderBeforeColdCalls();renderColdCalls()};updateColdFields();renderColdCalls();
+
+// ---- Accueil : rappels de cold calls à faire ----
+// Un rappel est « à faire » tant qu'il n'est pas marqué comme fait (relance terminée, ou recallDoneAt sur l'appel).
+function pendingColdCallRecalls(){
+ const items=[];
+ for(const call of Array.isArray(db.coldCalls)?db.coldCalls:[]){
+  if(!canRecall(call.outcome))continue;
+  const recall=coldCallRecall(call);
+  if(recall){if(!recall.done)items.push({call,date:recall.date,title:recall.title})}
+  else if(isRecallOutcome(call.outcome)&&!call.recallDoneAt)items.push({call,date:'',title:'Rappeler'});
+ }
+ return items.sort((a,b)=>(!a.date-!b.date)||a.date.localeCompare(b.date)||String(b.call.date).localeCompare(String(a.call.date)));
+}
+function completeColdCallRecall(call){
+ const linked=db.followups.find(f=>f.coldCallId===call.id&&f.origin==='recall');
+ if(linked){linked.done=true;linked.completedAt=new Date().toISOString()}else call.recallDoneAt=new Date().toISOString();
+ save();render();
+}
+function renderHomeRecalls(){
+ const body=$('home-coldcall-recalls');if(!body)return;body.replaceChildren();
+ const items=pendingColdCallRecalls(),today=localDay(new Date());
+ if(!items.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.className='empty';td.textContent='Aucun rappel de cold call à faire.';tr.append(td);body.append(tr);return}
+ for(const {call,date,title} of items){
+  const row=document.createElement('tr'),cells=Array.from({length:6},()=>document.createElement('td'));
+  ['Date de rappel','Entreprise','Téléphone','Résultat de l’appel','Objet','Action'].forEach((label,i)=>cells[i].dataset.label=label);
+  cells[0].textContent=date?fmt(date):'—';
+  if(date&&date<today){const badge=document.createElement('span');badge.className='overdue-badge';badge.textContent='En retard';cells[0].append(' ',badge)}
+  else if(date===today){const badge=document.createElement('span');badge.className='today-badge';badge.textContent='Aujourd’hui';cells[0].append(' ',badge)}
+  const name=document.createElement('strong');name.textContent=call.company||'';cells[1].append(name);
+  const contact=call.contactId&&by(call.contactId);if(contact){const meta=document.createElement('span');meta.className='meta participants-line';meta.textContent=contact.name;cells[1].append(meta)}
+  if(call.phone){const link=document.createElement('a');link.textContent=call.phone;link.href='tel:'+String(call.phone).replace(/[^\d+]/g,'');cells[2].append(link)}else cells[2].textContent='—';
+  cells[3].textContent=call.outcome==='À rappeler'?'À rappeler plus tard':call.outcome||'—';
+  cells[4].textContent=title;
+  const actions=document.createElement('div'),done=document.createElement('button'),edit=document.createElement('button');actions.className='interaction-actions';
+  done.type=edit.type='button';done.className='recall-done';done.textContent='Rappel fait';done.setAttribute('aria-label','Rappel fait : '+call.company);done.onclick=()=>completeColdCallRecall(call);
+  edit.className='close interaction-edit';edit.textContent='Modifier';edit.setAttribute('aria-label','Modifier le cold call de '+call.company);edit.onclick=()=>{view('coldcalls');reopenColdCall(call.id)};
+  actions.append(done,edit);cells[5].append(actions);row.append(...cells);body.append(row);
+ }
+}
+const renderBeforeColdCalls=render;render=function(){renderBeforeColdCalls();renderColdCalls();renderHomeRecalls()};updateColdFields();renderColdCalls();renderHomeRecalls();
